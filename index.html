@@ -54,10 +54,18 @@ small{color:#666;}
 .count{margin-top:6px;font-size:12px;color:#555;}
 button{cursor:pointer;}
 .btn-row button{
-  margin-right:4px;
-  margin-top:4px;
-  font-size:11px;
-  padding:3px 6px;
+  margin-right:6px;
+  margin-top:6px;
+  font-size:14px;      /* ←大きめ */
+  padding:8px 10px;    /* ←タップしやすく */
+  min-height:40px;     /* ←最低タップ領域 */
+  border-radius:8px;
+}
+.deck-stepper{
+  font-size:14px;
+  padding:6px 10px;
+  min-height:36px;
+  border-radius:8px;
 }
 
 /* フィルターUI */
@@ -138,6 +146,71 @@ button{cursor:pointer;}
 @media (max-width:700px){
   #layout{flex-direction:column;}
 }
+
+@media (min-width:701px){
+  #deckArea{
+    position: sticky;
+    top: 10px;                 /* 画面上からの余白 */
+    align-self: flex-start;    /* flexの中でstickyを効かせる定番 */
+    max-height: calc(100vh - 20px);
+    overflow: auto;            /* 右側の中だけスクロール */
+  }
+}
+/* ===== スマホ：下固定バー化 ===== */
+#deckBar{ display:none; }
+
+@media (max-width:700px){
+  /* 下の固定バー */
+  #deckBar{
+    display:block;
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:9999;
+    background:#f5f5f5;
+    border-top:1px solid #ccc;
+    padding:8px;
+  }
+  #deckBarToggle{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:14px;
+    padding:10px 12px;
+    border-radius:10px;
+  }
+
+  /* 本体（右カラム）を下から出るパネルにする */
+  #deckArea{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:60px;                 /* バーの高さ分だけ上げる */
+    z-index:9998;
+    max-height:60vh;
+    overflow:auto;
+    border-radius:12px 12px 0 0;
+    box-shadow:0 -6px 20px rgba(0,0,0,.15);
+    transform:translateY(110%);  /* 初期は隠す */
+    transition:transform .2s ease;
+
+    pointer-events:none;   /* ★追加：閉じている時は触れない */
+  }
+
+  /* 展開時 */
+  body.deck-open #deckArea{
+    transform:translateY(0);
+    pointer-events:auto;   /* ★開いた時だけ操作可能 */
+  }
+
+  /* バーがある分、ページ最下部が隠れないよう余白 */
+  body{
+    padding-bottom:90px;
+  }
+}
+
 </style>
 </head>
 
@@ -186,6 +259,14 @@ button{cursor:pointer;}
 
   <!-- デッキエリア -->
   <div id="deckArea">
+    <!-- スマホ用：下固定バー -->
+   <div id="deckBar">
+    <button id="deckBarToggle" type="button">
+     <span id="deckBarTitle">デッキ</span>
+     <span id="deckBarCount">0/40</span>
+    </button>
+   </div>
+
     <div>
       <h2 style="font-size:16px;margin:4px 0;">リーダー</h2>
       <div id="leaderSlot">未選択</div>
@@ -226,6 +307,8 @@ const clearLeaderBtn = document.getElementById('clearLeaderBtn');
 const clearDeckBtn   = document.getElementById('clearDeckBtn');
 const colorFilterEl  = document.getElementById('colorFilter');
 const setFilterEl    = document.getElementById('setFilter');
+const deckBarToggle = document.getElementById('deckBarToggle');
+const deckBarCount  = document.getElementById('deckBarCount');
 
 // ====== イベント ======
 input.addEventListener('input', renderSearch);
@@ -241,6 +324,13 @@ clearDeckBtn.addEventListener('click', () => {
   renderDeck();
   renderSearch();
 });
+// スマホ下バー：開閉
+if (deckBarToggle) {
+  deckBarToggle.addEventListener('click', () => {
+    document.body.classList.toggle('deck-open');
+  });
+}
+
 colorFilterEl.addEventListener('change', renderSearch);
 setFilterEl.addEventListener('change', renderSearch);
 
@@ -395,7 +485,6 @@ function renderSearch(){
 
     info.innerHTML =
       '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
-      + (c.text || "") + '<br>'
       + '<small>' + (c.id || "") + '</small>'
       + linkHtml;
 
@@ -426,7 +515,7 @@ function renderSearch(){
 
 // ====== デッキ描画 ======
 function renderDeck(){
-  // リーダー表示
+   // リーダー表示
   if (!leaderId){
     leaderSlotEl.textContent = "未選択";
   } else {
@@ -451,6 +540,10 @@ function renderDeck(){
   const overDeck = total > DECK_LIMIT;
   deckCountEl.innerHTML = "デッキ枚数: " + total + " / " + DECK_LIMIT
     + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
+     // スマホ下バーの表示更新
+   if (deckBarCount) {
+     deckBarCount.textContent = `${total}/${DECK_LIMIT}`;
+    }
 
   const ids = Object.keys(deck);
   if (ids.length === 0){
@@ -494,12 +587,12 @@ function renderDeck(){
 
     const btns = document.createElement('span');
     const minusBtn = document.createElement('button');
+    minusBtn.className = "deck-stepper";
     minusBtn.textContent = "−";
-    minusBtn.style.fontSize = "11px";
     minusBtn.onclick = () => removeFromDeck(id);
     const plusBtn = document.createElement('button');
+    plusBtn.className = "deck-stepper";
     plusBtn.textContent = "+";
-    plusBtn.style.fontSize = "11px";
     plusBtn.onclick = () => addToDeck(id);
     btns.appendChild(minusBtn);
     btns.appendChild(plusBtn);
