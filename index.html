@@ -156,60 +156,27 @@ button{cursor:pointer;}
     overflow: auto;            /* 右側の中だけスクロール */
   }
 }
-/* ===== スマホ：下固定バー化 ===== */
+/* ===== スマホ：固定バー化 ===== */
 #deckBar{ display:none; }
 
 @media (max-width:700px){
-  /* 下の固定バー */
-  #deckBar{
-    display:block;
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-    z-index:9999;
-    background:#f5f5f5;
-    border-top:1px solid #ccc;
-    padding:8px;
-  }
-  #deckBarToggle{
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:14px;
-    padding:10px 12px;
-    border-radius:10px;
-  }
+  #layout{flex-direction:column;}
 
-  /* 本体（右カラム）を下から出るパネルにする */
+  /* ★スマホではデッキ欄を先頭へ */
   #deckArea{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:60px;                 /* バーの高さ分だけ上げる */
-    z-index:9998;
-    max-height:60vh;
-    overflow:auto;
-    border-radius:12px 12px 0 0;
-    box-shadow:0 -6px 20px rgba(0,0,0,.15);
-    transform:translateY(110%);  /* 初期は隠す */
-    transition:transform .2s ease;
+    order: -1;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 
-    pointer-events:none;   /* ★追加：閉じている時は触れない */
-  }
+    /* ★デッキ欄が大きくなりすぎないように */
+    max-height: 45vh;
+    overflow: auto;
 
-  /* 展開時 */
-  body.deck-open #deckArea{
-    transform:translateY(0);
-    pointer-events:auto;   /* ★開いた時だけ操作可能 */
-  }
-
-  /* バーがある分、ページ最下部が隠れないよう余白 */
-  body{
-    padding-bottom:90px;
+    background: #f5f5f5;
   }
 }
+
 
 </style>
 </head>
