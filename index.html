@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ニベルアリーナ デッキビルダー（Live Server版）</title>
+
+<style>
+body{
+  font-family:sans-serif;
+  padding:10px;
+  max-width:1100px;
+  margin:0 auto;
+  box-sizing:border-box;
+}
+h1{font-size:20px;margin-bottom:8px;}
+#layout{display:flex;flex-wrap:wrap;gap:12px;}
+#searchArea{flex:2 1 340px;min-width:300px;}
+#deckArea{
+  flex:1 1 260px;
+  min-width:260px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  padding:8px;
+  background:#f5f5f5;
+}
+#q{
+  width:100%;
+  padding:8px;
+  font-size:16px;
+  box-sizing:border-box;
+}
+
+/* 検索結果カード（左側） */
+.card-row{
+  border:1px solid #ccc;
+  padding:8px;
+  margin:8px 0;
+  display:flex;
+  gap:8px;
+  background:#fafafa;
+  border-radius:4px;
+}
+.card-row img{
+  width:120px;          /* ★ここが検索結果サムネのサイズ */
+  height:auto;
+  max-height:180px;
+  object-fit:cover;
+  border:1px solid #999;
+  background:#eee;
+}
+
+small{color:#666;}
+.count{margin-top:6px;font-size:12px;color:#555;}
+button{cursor:pointer;}
+.btn-row button{
+  margin-right:4px;
+  margin-top:4px;
+  font-size:11px;
+  padding:3px 6px;
+}
+
+/* フィルターUI */
+.filters{
+  margin:8px 0;
+  font-size:12px;
+}
+.filter-block{margin-bottom:4px;}
+#colorFilter label{margin-right:8px;}
+.filter-label{
+  font-weight:bold;
+  margin-right:4px;
+}
+
+/* デッキ側 */
+#deckList, #leaderSlot{font-size:13px;}
+
+.badge{
+  display:inline-block;
+  padding:1px 4px;
+  border-radius:3px;
+  font-size:11px;
+  background:#ddd;
+  margin-left:4px;
+}
+.badge-leader{background:#ffcc80;}
+.badge-over{background:#ffcccc;color:#b00020;font-weight:bold;}
+
+/* リーダー欄 */
+.leader-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.leader-thumb{
+  width:60px;          /* ★リーダーサムネ */
+  height:auto;
+  object-fit:cover;
+  border:1px solid #999;
+  background:#eee;
+  border-radius:2px;
+}
+
+/* デッキ欄カード行 */
+.deck-card-row{
+  display:flex;
+  align-items:center;
+  padding:3px 0;
+  border-bottom:1px solid #ddd;
+  gap:6px;
+}
+.deck-card-left{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:1;
+  min-width:0; /* スマホでエリプシス効かせる */
+}
+.deck-card-thumb{
+  width:40px;          /* ★デッキサムネ */
+  height:auto;
+  object-fit:cover;
+  border:1px solid #999;
+  background:#eee;
+  border-radius:2px;
+}
+.deck-card-name{
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.deck-card-count{
+  margin:0 4px;
+  white-space:nowrap;
+}
+
+@media (max-width:700px){
+  #layout{flex-direction:column;}
+}
+</style>
+</head>
+
+<body>
+<h1>ニベルアリーナ デッキビルダー（Live Server版）</h1>
+
+<p style="font-size:13px;">
+カード名 or テキストを入力して検索し、デッキ構築ができます。<br>
+・リーダー：1枚（どのカードでも設定可）<br>
+・デッキ：40枚目安（超過時は赤表示）<br>
+・同名カード：3枚目安（超過時は赤表示）
+</p>
+
+<div id="layout">
+
+  <!-- 検索エリア -->
+  <div id="searchArea">
+    <input id="q" placeholder="例：クラウン / エグジット / 装備" />
+
+    <!-- 色 & 弾フィルター -->
+    <div class="filters">
+      <div class="filter-block">
+        <span class="filter-label">色フィルター：</span>
+        <div id="colorFilter">
+          <label><input type="checkbox" value="黄">黄</label>
+          <label><input type="checkbox" value="赤">赤</label>
+          <label><input type="checkbox" value="青">青</label>
+          <!-- 必要ならここに増やす（緑 / 紫 / 無 / 多色 など） -->
+        </div>
+      </div>
+
+      <div class="filter-block">
+        <label class="filter-label" for="setFilter">弾フィルター：</label>
+        <select id="setFilter">
+          <option value="">すべての弾</option>
+          <option value="BT02">BT02</option>
+          <option value="ST05">ST05</option>
+          <!-- 新しい弾を追加したらここに option を足す -->
+        </select>
+      </div>
+    </div>
+
+    <div class="count" id="searchCount"></div>
+    <div id="list"></div>
+  </div>
+
+  <!-- デッキエリア -->
+  <div id="deckArea">
+    <div>
+      <h2 style="font-size:16px;margin:4px 0;">リーダー</h2>
+      <div id="leaderSlot">未選択</div>
+      <button id="clearLeaderBtn" style="margin-top:4px;font-size:11px;">リーダー解除</button>
+    </div>
+
+    <hr>
+
+    <div>
+      <h2 style="font-size:16px;margin:4px 0;">デッキ</h2>
+      <div id="deckCount" class="count"></div>
+      <div id="deckList"></div>
+      <button id="clearDeckBtn" style="margin-top:4px;font-size:11px;">デッキをリセット</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ====== 設定 ======
+const DECK_LIMIT = 40;   // デッキ目安枚数
+const COPY_LIMIT = 3;    // 同名カード目安上限
+const COLOR_ORDER = ['黄', '赤', '青', '緑', '紫', '無', '多色'];
+
+// ====== 状態 ======
+let cards = [];          // CSVから読み込んだカード
+let leaderId = null;     // 現在のリーダー
+const deck = {};         // { id: 枚数 }
+
+// ====== DOM取得 ======
+const input        = document.getElementById('q');
+const list         = document.getElementById('list');
+const searchCountEl= document.getElementById('searchCount');
+const deckCountEl  = document.getElementById('deckCount');
+const deckListEl   = document.getElementById('deckList');
+const leaderSlotEl = document.getElementById('leaderSlot');
+const clearLeaderBtn = document.getElementById('clearLeaderBtn');
+const clearDeckBtn   = document.getElementById('clearDeckBtn');
+const colorFilterEl  = document.getElementById('colorFilter');
+const setFilterEl    = document.getElementById('setFilter');
+
+// ====== イベント ======
+input.addEventListener('input', renderSearch);
+clearLeaderBtn.addEventListener('click', () => {
+  leaderId = null;
+  renderDeck();
+  renderSearch();
+});
+clearDeckBtn.addEventListener('click', () => {
+  if (!confirm('デッキとリーダーをすべてクリアしますか？')) return;
+  leaderId = null;
+  for (const k in deck) delete deck[k];
+  renderDeck();
+  renderSearch();
+});
+colorFilterEl.addEventListener('change', renderSearch);
+setFilterEl.addEventListener('change', renderSearch);
+
+// ====== CSV読み込み ======
+async function loadCardsFromCsv() {
+  const res = await fetch('cards.csv'); // index.html と同じフォルダ
+  if (!res.ok) throw new Error('cards.csv の読み込みに失敗: ' + res.status);
+  const text = await res.text();
+  return parseCsv(text);
+}
+
+function parseCsv(csvText) {
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length === 0) return [];
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(line => {
+    const cols = line.split(',');
+    const obj = {};
+    headers.forEach((h,i) => {
+      obj[h] = cols[i] !== undefined ? cols[i] : '';
+    });
+    return obj;
+  });
+}
+
+// GoogleドライブのサムネURL
+function driveThumb(url) {
+  if (!url) return "";
+  // ?id=xxxx or uc?export=view&id=xxxx 両方ざっくり対応
+  const m = url.match(/id=([^&]+)/);
+  if (!m) return url;
+  const id = m[1];
+  return "https://drive.google.com/thumbnail?id=" + id + "&sz=w400";
+}
+
+function currentDeckCount() {
+  return Object.values(deck).reduce((a,b)=>a+b,0);
+}
+
+function colorSortKey(card){
+  const idx = COLOR_ORDER.indexOf(card.color);
+  return idx === -1 ? 999 : idx;
+}
+
+// ====== デッキ操作 ======
+function addToDeck(cardId){
+  const cur = deck[cardId] || 0;
+  deck[cardId] = cur + 1;
+  renderDeck();
+  renderSearch();
+}
+
+function removeFromDeck(cardId){
+  const cur = deck[cardId] || 0;
+  if (cur <= 0) return;
+  if (cur === 1) delete deck[cardId];
+  else deck[cardId] = cur - 1;
+  renderDeck();
+  renderSearch();
+}
+
+function setLeader(cardId){
+  leaderId = cardId;
+  renderDeck();
+  renderSearch();
+}
+
+// ====== 検索結果描画 ======
+function renderSearch(){
+  const q = input.value.trim().toLowerCase();
+  list.innerHTML = "";
+
+  if (!cards || cards.length === 0){
+    searchCountEl.textContent = "カードデータが読み込まれていません。cards.csv を確認してください。";
+    return;
+  }
+
+  // 今チェックされている色
+  const selectedColors = Array.from(
+    colorFilterEl.querySelectorAll('input[type="checkbox"]:checked')
+  ).map(cb => cb.value);
+
+  // 今選択されている弾
+  const selectedSet = setFilterEl.value;
+
+  // 絞り込み
+  const filtered = cards.filter(c => {
+    // テキスト検索（名前 + 効果）
+    if (q){
+      const hay = ((c.name || "") + " " + (c.text || "")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    // 色フィルター
+    if (selectedColors.length > 0){
+      if (!selectedColors.includes(c.color)) return false;
+    }
+    // 弾フィルター
+    if (selectedSet){
+      if (c.set !== selectedSet) return false;
+    }
+    return true;
+  });
+
+  // 並び順：色 → 弾 → 番号
+  filtered.sort((a,b)=>{
+    const ca = colorSortKey(a);
+    const cb = colorSortKey(b);
+    if (ca !== cb) return ca - cb;
+
+    if ((a.set||"") !== (b.set||"")){
+      return (a.set||"").localeCompare(b.set||"");
+    }
+
+    return (Number(a.number)||0) - (Number(b.number)||0);
+  });
+
+  searchCountEl.textContent = "検索ヒット: " + filtered.length + " / 全" + cards.length + "枚";
+
+  if (filtered.length === 0){
+    const div = document.createElement('div');
+    div.textContent = "該当するカードがありません。";
+    list.appendChild(div);
+    return;
+  }
+
+  filtered.forEach(c => {
+    const div = document.createElement('div');
+    div.className = "card-row";
+
+    const thumb = driveThumb(c.image);
+    if (thumb){
+      const img = document.createElement('img');
+      img.src = thumb;
+      img.alt = c.name || "";
+      img.onerror = function(){ this.style.display = "none"; };
+      div.appendChild(img);
+    }
+
+    const info = document.createElement('div');
+    let badges = "";
+    if (leaderId === c.id){
+      badges += '<span class="badge badge-leader">リーダー</span>';
+    }
+    const deckCount = deck[c.id] || 0;
+    if (deckCount > 0){
+      const over = deckCount > COPY_LIMIT;
+      badges += '<span class="badge' + (over ? ' badge-over' : '') + '">デッキ ' + deckCount + '枚</span>';
+    }
+    const linkHtml = c.image
+      ? '<div><a href="' + c.image + '" target="_blank" rel="noopener">元画像を開く</a></div>'
+      : "";
+
+    info.innerHTML =
+      '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
+      + (c.text || "") + '<br>'
+      + '<small>' + (c.id || "") + '</small>'
+      + linkHtml;
+
+    const btnRow = document.createElement('div');
+    btnRow.className = "btn-row";
+
+    const addBtn = document.createElement('button');
+    addBtn.textContent = "+デッキ";
+    addBtn.onclick = () => addToDeck(c.id);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = "−デッキ";
+    removeBtn.onclick = () => removeFromDeck(c.id);
+
+    const leaderBtn = document.createElement('button');
+    leaderBtn.textContent = "リーダーにする";
+    leaderBtn.onclick = () => setLeader(c.id);
+
+    btnRow.appendChild(addBtn);
+    btnRow.appendChild(removeBtn);
+    btnRow.appendChild(leaderBtn);
+
+    info.appendChild(btnRow);
+    div.appendChild(info);
+    list.appendChild(div);
+  });
+}
+
+// ====== デッキ描画 ======
+function renderDeck(){
+  // リーダー表示
+  if (!leaderId){
+    leaderSlotEl.textContent = "未選択";
+  } else {
+    const card = cards.find(c => c.id === leaderId);
+    if (!card){
+      leaderSlotEl.textContent = leaderId + "（データなし）";
+    } else {
+      const thumb = driveThumb(card.image);
+      let html = '<div class="leader-row">';
+      if (thumb){
+        html += '<img class="leader-thumb" src="' + thumb + '" alt="' + (card.name || "") + '">';
+      }
+      html += '<div><b>' + (card.name || "(名称なし)") + '</b><br>'
+           +  '<small>' + card.id + '</small></div></div>';
+      leaderSlotEl.innerHTML = html;
+    }
+  }
+
+  // デッキ一覧
+  deckListEl.innerHTML = "";
+  const total = currentDeckCount();
+  const overDeck = total > DECK_LIMIT;
+  deckCountEl.innerHTML = "デッキ枚数: " + total + " / " + DECK_LIMIT
+    + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
+
+  const ids = Object.keys(deck);
+  if (ids.length === 0){
+    const div = document.createElement('div');
+    div.textContent = "デッキにカードがありません。";
+    deckListEl.appendChild(div);
+    return;
+  }
+
+  ids.sort();
+  ids.forEach(id => {
+    const count = deck[id];
+    const card = cards.find(c => c.id === id) || {id, name:""};
+
+    const row  = document.createElement('div');
+    row.className = "deck-card-row";
+
+    const left = document.createElement('div');
+    left.className = "deck-card-left";
+
+    const thumb = driveThumb(card.image);
+    if (thumb){
+      const img = document.createElement('img');
+      img.className = "deck-card-thumb";
+      img.src = thumb;
+      img.alt = card.name || "";
+      img.onerror = function(){ this.style.display = "none"; };
+      left.appendChild(img);
+    }
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = "deck-card-name";
+    nameSpan.textContent = (card.name || "(名称なし)") + " (" + card.id + ")";
+    left.appendChild(nameSpan);
+
+    const overCopy = count > COPY_LIMIT;
+    const countSpan = document.createElement('span');
+    countSpan.className = "deck-card-count";
+    countSpan.innerHTML =
+      count + '枚' + (overCopy ? ' <span class="badge-over">3枚超</span>' : '');
+
+    const btns = document.createElement('span');
+    const minusBtn = document.createElement('button');
+    minusBtn.textContent = "−";
+    minusBtn.style.fontSize = "11px";
+    minusBtn.onclick = () => removeFromDeck(id);
+    const plusBtn = document.createElement('button');
+    plusBtn.textContent = "+";
+    plusBtn.style.fontSize = "11px";
+    plusBtn.onclick = () => addToDeck(id);
+    btns.appendChild(minusBtn);
+    btns.appendChild(plusBtn);
+
+    row.appendChild(left);
+    row.appendChild(countSpan);
+    row.appendChild(btns);
+
+    deckListEl.appendChild(row);
+  });
+}
+
+// ====== 初期化 ======
+(async function init(){
+  try{
+    cards = await loadCardsFromCsv();
+    renderSearch();
+    renderDeck();
+  }catch(e){
+    console.error(e);
+    searchCountEl.textContent = 'カードリスト(cards.csv)の読み込みに失敗しました。パスとファイル名を確認してください。';
+  }
+})();
+</script>
+</body>
+</html>
