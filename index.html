@@ -200,6 +200,18 @@ button{cursor:pointer;}
   }
 
 }
+/* デッキ・リーダー操作ボタンを大きく */
+#deckArea button{
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+/* ±ボタンはさらに押しやすく */
+.deck-card-row button{
+  font-size: 16px;
+  padding: 6px 10px;
+  margin-left: 2px;
+}
 
 </style>
 </head>
@@ -610,6 +622,8 @@ function renderDeck(){
   });
 }
 async function exportDeckAsImage(){
+  document.getElementById('exportOverlay').style.display = 'flex';
+
   // ===== 保存用DOMを作る =====
   const wrap = document.createElement('div');
   wrap.style.background = '#ffffff';
@@ -703,11 +717,15 @@ async function exportDeckAsImage(){
   wrap.style.top = '0';
   document.body.appendChild(wrap);
 
-  const canvas = await html2canvas(wrap, {
-    backgroundColor: '#ffffff',
-    scale: 2,
-    useCORS: true
-  });
+  // ★画像の読み込みを待つ
+await waitImagesLoaded(wrap);
+
+const canvas = await html2canvas(wrap, {
+  backgroundColor: '#ffffff',
+  scale: 2,
+  useCORS: true
+});
+
 
   document.body.removeChild(wrap);
 
@@ -721,6 +739,8 @@ async function exportDeckAsImage(){
     String(now.getMinutes()).padStart(2,'0');
   a.download = `nibel_deck_${stamp}.png`;
   a.href = canvas.toDataURL('image/png');
+  document.getElementById('exportOverlay').style.display = 'none';
+
   a.click();
 }
 
@@ -736,6 +756,19 @@ async function exportDeckAsImage(){
   }
 })();
 </script>
+<div id="exportOverlay" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  color:#fff;
+  font-size:16px;
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div>画像を生成しています…</div>
+</div>
 
 </body>
 </html>
