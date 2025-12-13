@@ -663,127 +663,136 @@ function waitImagesLoaded(container, timeoutMs = 3000){
 }
 
 async function exportDeckAsImage(){
-  document.getElementById('exportOverlay').style.display = 'flex';
-try {
-  // ===== 保存用DOMを作る =====
-  const wrap = document.createElement('div');
-  wrap.style.background = '#ffffff';
-  wrap.style.color = '#000';
-  wrap.style.padding = '16px';
-  wrap.style.width = '360px';
-  wrap.style.boxSizing = 'border-box';
-  wrap.style.fontFamily = 'sans-serif';
+  const overlay = document.getElementById('exportOverlay');
+  if (overlay) overlay.style.display = 'flex';
 
-  // タイトル
-  const title = document.createElement('div');
-  title.textContent = 'ニベルアリーナ デッキ';
-  title.style.fontSize = '18px';
-  title.style.fontWeight = 'bold';
-  title.style.marginBottom = '6px';
-  wrap.appendChild(title);
+  // 画像要素を作る共通関数（★ここが肝）
+  function makeImg(src, widthPx){
+    const img = document.createElement('img');
+    img.crossOrigin = "anonymous";        // ★CORS
+    img.referrerPolicy = "no-referrer";  // ★Drive系で効くことがある
+    img.src = src;
+    img.style.width = widthPx + "px";
+    img.style.border = "1px solid #999";
+    return img;
+  }
 
-  // 日付・枚数
-  const meta = document.createElement('div');
-  meta.style.fontSize = '12px';
-  meta.style.marginBottom = '10px';
-  const total = Object.values(deck).reduce((a,b)=>a+b,0);
-  const now = new Date();
-  meta.textContent =
-    `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}　デッキ枚数：${total}`;
-  wrap.appendChild(meta);
+  try {
+    // ===== 保存用DOMを作る =====
+    const wrap = document.createElement('div');
+    wrap.style.background = '#ffffff';
+    wrap.style.color = '#000';
+    wrap.style.padding = '16px';
+    wrap.style.width = '360px';
+    wrap.style.boxSizing = 'border-box';
+    wrap.style.fontFamily = 'sans-serif';
 
-  // ===== リーダー =====
-  if (leaderId){
-    const leader = cards.find(c => c.id === leaderId);
-    if (leader){
-      const sec = document.createElement('div');
-      sec.style.marginBottom = '10px';
-      sec.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">リーダー</div>`;
+    // タイトル
+    const title = document.createElement('div');
+    title.textContent = 'ニベルアリーナ デッキ';
+    title.style.fontSize = '18px';
+    title.style.fontWeight = 'bold';
+    title.style.marginBottom = '6px';
+    wrap.appendChild(title);
+
+    // 日付・枚数
+    const meta = document.createElement('div');
+    meta.style.fontSize = '12px';
+    meta.style.marginBottom = '10px';
+    const total = Object.values(deck).reduce((a,b)=>a+b,0);
+    const now = new Date();
+    meta.textContent = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}　デッキ枚数：${total}`;
+    wrap.appendChild(meta);
+
+    // ===== リーダー =====
+    if (leaderId){
+      const leader = cards.find(c => c.id === leaderId);
+      if (leader){
+        const sec = document.createElement('div');
+        sec.style.marginBottom = '10px';
+        sec.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">リーダー</div>`;
+
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+
+        const leaderThumb = driveThumb(leader.image);
+        if (leaderThumb){
+          row.appendChild(makeImg(leaderThumb, 64));
+        }
+
+        const name = document.createElement('div');
+        name.innerHTML = `<div>${leader.name}</div><div style="font-size:11px;color:#555;">${leader.id}</div>`;
+        row.appendChild(name);
+
+        sec.appendChild(row);
+        wrap.appendChild(sec);
+      }
+    }
+
+    // 区切り線
+    const hr = document.createElement('hr');
+    hr.style.margin = '8px 0';
+    wrap.appendChild(hr);
+
+    // ===== デッキ本体（1カード1行） =====
+    const ids = Object.keys(deck).sort();
+    ids.forEach(id => {
+      const card = cards.find(c => c.id === id);
+      if (!card) return;
+
       const row = document.createElement('div');
       row.style.display = 'flex';
       row.style.alignItems = 'center';
       row.style.gap = '8px';
+      row.style.marginBottom = '6px';
 
-      const img = document.createElement('img');
-      img.src = driveThumb(leader.image);
-      img.style.width = '64px';
-      img.style.border = '1px solid #999';
-      row.appendChild(img);
+      const thumb = driveThumb(card.image);
+      if (thumb){
+        row.appendChild(makeImg(thumb, 56));
+      }
 
-      const name = document.createElement('div');
-      name.innerHTML = `<div>${leader.name}</div><div style="font-size:11px;color:#555;">${leader.id}</div>`;
-      row.appendChild(name);
+      const text = document.createElement('div');
+      text.style.flex = '1';
+      text.innerHTML =
+        `<div>${card.name} × ${deck[id]}</div>
+         <div style="font-size:11px;color:#555;">${card.id}</div>`;
+      row.appendChild(text);
 
-      sec.appendChild(row);
-      wrap.appendChild(sec);
-    }
-  }
+      wrap.appendChild(row);
+    });
 
-  // 区切り線
-  const hr = document.createElement('hr');
-  hr.style.margin = '8px 0';
-  wrap.appendChild(hr);
+    // ===== 画面外に配置して画像化 =====
+    wrap.style.position = 'fixed';
+    wrap.style.left = '-10000px';
+    wrap.style.top = '0';
+    document.body.appendChild(wrap);
 
-  // ===== デッキ本体（1カード1行） =====
-  const ids = Object.keys(deck).sort();
-  ids.forEach(id => {
-    const card = cards.find(c => c.id === id);
-    if (!card) return;
+    // ★画像の読み込みを待つ（少し長めに）
+    await waitImagesLoaded(wrap, 8000);
 
-    const row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.alignItems = 'center';
-    row.style.gap = '8px';
-    row.style.marginBottom = '6px';
+    const canvas = await html2canvas(wrap, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true
+    });
 
-    const img = document.createElement('img');
-    img.src = driveThumb(card.image);
-    img.style.width = '56px';
-    img.style.border = '1px solid #999';
-    row.appendChild(img);
+    document.body.removeChild(wrap);
 
-    const text = document.createElement('div');
-    text.style.flex = '1';
-    text.innerHTML =
-      `<div>${card.name} × ${deck[id]}</div>
-       <div style="font-size:11px;color:#555;">${card.id}</div>`;
-    row.appendChild(text);
+    // ===== ダウンロード =====
+    const a = document.createElement('a');
+    const stamp =
+      now.getFullYear() +
+      String(now.getMonth()+1).padStart(2,'0') +
+      String(now.getDate()).padStart(2,'0') +
+      String(now.getHours()).padStart(2,'0') +
+      String(now.getMinutes()).padStart(2,'0');
+    a.download = `nibel_deck_${stamp}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
 
-    wrap.appendChild(row);
-  });
-
-  // ===== 画面外に配置して画像化 =====
-  wrap.style.position = 'fixed';
-  wrap.style.left = '-10000px';
-  wrap.style.top = '0';
-  document.body.appendChild(wrap);
-
-  // ★画像の読み込みを待つ
-await waitImagesLoaded(wrap);
-
-const canvas = await html2canvas(wrap, {
-  backgroundColor: '#ffffff',
-  scale: 2,
-  useCORS: true
-});
-
-
-  document.body.removeChild(wrap);
-
-  // ===== ダウンロード =====
-  const a = document.createElement('a');
-  const stamp =
-    now.getFullYear() +
-    String(now.getMonth()+1).padStart(2,'0') +
-    String(now.getDate()).padStart(2,'0') +
-    String(now.getHours()).padStart(2,'0') +
-    String(now.getMinutes()).padStart(2,'0');
-  a.download = `nibel_deck_${stamp}.png`;
-  a.href = canvas.toDataURL('image/png');
-  document.getElementById('exportOverlay').style.display = 'none';
-
-  a.click(); 
-} finally {
+  } finally {
     if (overlay) overlay.style.display = 'none';
   }
 }
