@@ -503,6 +503,7 @@ function renderSearch(){
   const filtered = cards.filter(c => {
     // テキスト検索（名前 + 効果）
     if (q){
+      // NOTE: 検索対象は name + text の形を維持（将来text実装時に復帰しやすい）
       const hay = ((c.name || "") + " " + (c.text || "")).toLowerCase();
       if (!hay.includes(q)) return false;
     }
@@ -569,7 +570,8 @@ function renderSearch(){
 
     info.innerHTML =
       '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
-      + (c.text || "") + '<br>'
+      // NOTE: 効果テキスト(text)は将来実装予定のため、いったん表示しない
+      // + (c.text || "") + '<br>'
       + '<small>' + (c.id || "") + '</small>'
       + linkHtml;
 
@@ -793,7 +795,18 @@ async function exportDeckAsImage(){
   wrap.style.fontFamily = 'sans-serif';
 
   const title = document.createElement('div');
-  title.textContent = 'ニベルアリーナ デッキ';
+  // タイトル：リーダーの色＋リーダー名（例：赤レッドフード デッキ）
+  let titleText = 'ニベルアリーナ デッキ';
+  if (leaderId){
+    const leader = cards.find(c => c.id === leaderId);
+    if (leader){
+      const color = (leader.color || '').trim();
+      const name  = (leader.name  || '').trim();
+      if (color && name) titleText = `${color}${name} デッキ`;
+      else if (name)     titleText = `${name} デッキ`;
+    }
+  }
+  title.textContent = titleText;
   title.style.fontSize = '18px';
   title.style.fontWeight = 'bold';
   title.style.marginBottom = '6px';
@@ -925,6 +938,10 @@ async function exportDeckAsImage(){
 (async function init(){
   try{
     cards = await loadCardsFromCsv();
+    // NOTE: 現在はCSVのtext（効果テキスト）を検索/表示に使わない運用。
+    // 将来text検索を戻すときはこの1行を削除してください。
+    // （renderSearch内の検索対象は name + text のまま残してあります）
+    cards = cards.map(c => ({ ...c, text: "" }));
     updateDeckViewBtn();
     renderSearch();
     renderDeck();
