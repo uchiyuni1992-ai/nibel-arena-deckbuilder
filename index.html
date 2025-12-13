@@ -183,12 +183,22 @@ button{cursor:pointer;}
     font-size: 16px;
     padding: 6px 10px;
   }
-
-  /* ★② 検索結果カードの画像を小さく */
+/* 検索結果カード全体を少し詰める */
+  .card-row{
+    gap: 6px;           /* 余白を減らす */
+    padding: 6px;       /* 外枠余白を減らす */
+  }
+  /* ★② 検索結果カードの画像 */
   .card-row img{
     width: 90px;
     max-height: 135px;
   }
+/* 情報側を横幅いっぱい使わせる */
+  .card-row > div{
+    flex: 1;
+    min-width: 0;
+  }
+
 }
 
 </style>
