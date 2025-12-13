@@ -162,21 +162,34 @@ button{cursor:pointer;}
 @media (max-width:700px){
   #layout{flex-direction:column;}
 
-  /* ★スマホではデッキ欄を先頭へ */
+  /* デッキ欄を上に固定 */
   #deckArea{
     order: -1;
     position: sticky;
     top: 0;
     z-index: 10;
-
-    /* ★デッキ欄が大きくなりすぎないように */
-    max-height: 45vh;
+    max-height: 32vh;
     overflow: auto;
-
+    padding: 6px;
     background: #f5f5f5;
   }
-}
 
+  /* 見出し・区切りをコンパクトに */
+  #deckArea h2{ margin: 2px 0; }
+  #deckArea hr{ margin: 6px 0; }
+
+  /* ★① ±ボタンを押しやすく */
+  .deck-card-row button{
+    font-size: 16px;
+    padding: 6px 10px;
+  }
+
+  /* ★② 検索結果カードの画像を小さく */
+  .card-row img{
+    width: 90px;
+    max-height: 135px;
+  }
+}
 
 </style>
 </head>
