@@ -162,9 +162,11 @@ button{cursor:pointer;}
       <div class="filter-block">
         <span class="filter-label">色フィルター：</span>
         <div id="colorFilter">
-          <label><input type="checkbox" value="黄">黄</label>
           <label><input type="checkbox" value="赤">赤</label>
+          <label><input type="checkbox" value="緑">緑</label>
+          <label><input type="checkbox" value="紫">紫</label>
           <label><input type="checkbox" value="青">青</label>
+          <label><input type="checkbox" value="黄">黄</label>
           <!-- 必要ならここに増やす（緑 / 紫 / 無 / 多色 など） -->
         </div>
       </div>
@@ -173,7 +175,12 @@ button{cursor:pointer;}
         <label class="filter-label" for="setFilter">弾フィルター：</label>
         <select id="setFilter">
           <option value="">すべての弾</option>
+          <option value="BT01">BT01</option>
           <option value="BT02">BT02</option>
+          <option value="ST01">ST01</option>
+          <option value="ST02">ST02</option>
+          <option value="ST03">ST03</option>
+          <option value="ST04">ST04</option>
           <option value="ST05">ST05</option>
           <!-- 新しい弾を追加したらここに option を足す -->
         </select>
@@ -208,7 +215,7 @@ button{cursor:pointer;}
 // ====== 設定 ======
 const DECK_LIMIT = 40;   // デッキ目安枚数
 const COPY_LIMIT = 3;    // 同名カード目安上限
-const COLOR_ORDER = ['黄', '赤', '青', '緑', '紫', '無', '多色'];
+const COLOR_ORDER = ['赤', '緑', '紫', '青', '黄', '無', '多色'];
 
 // ====== 状態 ======
 let cards = [];          // CSVから読み込んだカード
