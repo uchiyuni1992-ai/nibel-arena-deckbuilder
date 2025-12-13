@@ -294,6 +294,7 @@ button{cursor:pointer;}
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
+
 // ====== 設定 ======
 const DECK_LIMIT = 40;   // デッキ目安枚数
 const COPY_LIMIT = 3;    // 同名カード目安上限
@@ -740,6 +741,7 @@ function renderDeck(){
     deckListEl.appendChild(row);
   });
 
+}
 
 function waitImagesLoaded(container, timeoutMs = 8000){
   const imgs = Array.from(container.querySelectorAll('img'));
@@ -931,6 +933,7 @@ async function exportDeckAsImage(){
     searchCountEl.textContent = 'カードリスト(cards.csv)の読み込みに失敗しました。パスとファイル名を確認してください。';
   }
 })();
+
 </script>
 
 <div id="exportOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);color:#fff;font-size:16px;z-index:9999;align-items:center;justify-content:center;">
