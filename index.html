@@ -54,18 +54,10 @@ small{color:#666;}
 .count{margin-top:6px;font-size:12px;color:#555;}
 button{cursor:pointer;}
 .btn-row button{
-  margin-right:6px;
-  margin-top:6px;
-  font-size:14px;      /* ←大きめ */
-  padding:8px 10px;    /* ←タップしやすく */
-  min-height:40px;     /* ←最低タップ領域 */
-  border-radius:8px;
-}
-.deck-stepper{
-  font-size:14px;
-  padding:6px 10px;
-  min-height:36px;
-  border-radius:8px;
+  margin-right:4px;
+  margin-top:4px;
+  font-size:11px;
+  padding:3px 6px;
 }
 
 /* フィルターUI */
@@ -146,73 +138,6 @@ button{cursor:pointer;}
 @media (max-width:700px){
   #layout{flex-direction:column;}
 }
-
-@media (min-width:701px){
-  #deckArea{
-    position: sticky;
-    top: 10px;                 /* 画面上からの余白 */
-    align-self: flex-start;    /* flexの中でstickyを効かせる定番 */
-    max-height: calc(100vh - 20px);
-    overflow: auto;            /* 右側の中だけスクロール */
-  }
-}
-/* ===== スマホ：固定バー化 ===== */
-#deckBar{ display:none; }
-
-@media (max-width:700px){
-  #layout{flex-direction:column;}
-
-  /* デッキ欄を上に固定 */
-  #deckArea{
-    order: -1;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    max-height: 32vh;
-    overflow: auto;
-    padding: 6px;
-    background: #f5f5f5;
-  }
-
-  /* 見出し・区切りをコンパクトに */
-  #deckArea h2{ margin: 2px 0; }
-  #deckArea hr{ margin: 6px 0; }
-
-  /* ★① ±ボタンを押しやすく */
-  .deck-card-row button{
-    font-size: 16px;
-    padding: 6px 10px;
-  }
-/* 検索結果カード全体を少し詰める */
-  .card-row{
-    gap: 6px;           /* 余白を減らす */
-    padding: 6px;       /* 外枠余白を減らす */
-  }
-  /* ★② 検索結果カードの画像 */
-  .card-row img{
-    width: 90px;
-    max-height: 135px;
-  }
-/* 情報側を横幅いっぱい使わせる */
-  .card-row > div{
-    flex: 1;
-    min-width: 0;
-  }
-
-}
-/* デッキ・リーダー操作ボタンを大きく */
-#deckArea button{
-  font-size: 13px;
-  padding: 6px 10px;
-}
-
-/* ±ボタンはさらに押しやすく */
-.deck-card-row button{
-  font-size: 16px;
-  padding: 6px 10px;
-  margin-left: 2px;
-}
-
 </style>
 </head>
 
@@ -237,11 +162,9 @@ button{cursor:pointer;}
       <div class="filter-block">
         <span class="filter-label">色フィルター：</span>
         <div id="colorFilter">
-          <label><input type="checkbox" value="赤">赤</label>
-          <label><input type="checkbox" value="緑">緑</label>
-          <label><input type="checkbox" value="紫">紫</label>
-          <label><input type="checkbox" value="青">青</label>
           <label><input type="checkbox" value="黄">黄</label>
+          <label><input type="checkbox" value="赤">赤</label>
+          <label><input type="checkbox" value="青">青</label>
           <!-- 必要ならここに増やす（緑 / 紫 / 無 / 多色 など） -->
         </div>
       </div>
@@ -250,12 +173,7 @@ button{cursor:pointer;}
         <label class="filter-label" for="setFilter">弾フィルター：</label>
         <select id="setFilter">
           <option value="">すべての弾</option>
-          <option value="BT01">BT01</option>
           <option value="BT02">BT02</option>
-          <option value="ST01">ST01</option>
-          <option value="ST02">ST02</option>
-          <option value="ST03">ST03</option>
-          <option value="ST04">ST04</option>
           <option value="ST05">ST05</option>
           <!-- 新しい弾を追加したらここに option を足す -->
         </select>
@@ -268,14 +186,6 @@ button{cursor:pointer;}
 
   <!-- デッキエリア -->
   <div id="deckArea">
-    <!-- スマホ用：下固定バー -->
-   <div id="deckBar">
-    <button id="deckBarToggle" type="button">
-     <span id="deckBarTitle">デッキ</span>
-     <span id="deckBarCount">0/40</span>
-    </button>
-   </div>
-
     <div>
       <h2 style="font-size:16px;margin:4px 0;">リーダー</h2>
       <div id="leaderSlot">未選択</div>
@@ -289,19 +199,16 @@ button{cursor:pointer;}
       <div id="deckCount" class="count"></div>
       <div id="deckList"></div>
       <button id="clearDeckBtn" style="margin-top:4px;font-size:11px;">デッキをリセット</button>
-      <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
     </div>
   </div>
 
 </div>
-  
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
 // ====== 設定 ======
 const DECK_LIMIT = 40;   // デッキ目安枚数
 const COPY_LIMIT = 3;    // 同名カード目安上限
-const COLOR_ORDER = ['赤', '緑', '紫', '青', '黄', '無', '多色'];
+const COLOR_ORDER = ['黄', '赤', '青', '緑', '紫', '無', '多色'];
 
 // ====== 状態 ======
 let cards = [];          // CSVから読み込んだカード
@@ -319,10 +226,7 @@ const clearLeaderBtn = document.getElementById('clearLeaderBtn');
 const clearDeckBtn   = document.getElementById('clearDeckBtn');
 const colorFilterEl  = document.getElementById('colorFilter');
 const setFilterEl    = document.getElementById('setFilter');
-const deckBarToggle = document.getElementById('deckBarToggle');
-const deckBarCount  = document.getElementById('deckBarCount');
-const exportDeckImgBtn = document.getElementById('exportDeckImgBtn');
-  
+
 // ====== イベント ======
 input.addEventListener('input', renderSearch);
 clearLeaderBtn.addEventListener('click', () => {
@@ -337,61 +241,33 @@ clearDeckBtn.addEventListener('click', () => {
   renderDeck();
   renderSearch();
 });
-if (exportDeckImgBtn) {
-  exportDeckImgBtn.addEventListener('click', exportDeckAsImage);
-}
-
-// スマホ下バー：開閉
-if (deckBarToggle) {
-  deckBarToggle.addEventListener('click', () => {
-    document.body.classList.toggle('deck-open');
-  });
-}
-
 colorFilterEl.addEventListener('change', renderSearch);
 setFilterEl.addEventListener('change', renderSearch);
 
 // ====== CSV読み込み ======
 async function loadCardsFromCsv() {
-  const res = await fetch('cards.csv?ts=' + Date.now()); // index.html と同じフォルダ
+  const res = await fetch('cards.csv'); // index.html と同じフォルダ
   if (!res.ok) throw new Error('cards.csv の読み込みに失敗: ' + res.status);
-   const text = await res.text();
-   if (text.trim().startsWith("<!DOCTYPE html")) {
-    throw new Error("cards.csv が取れず、HTML(404ページ等)が返っています。配置場所を確認してください。");
-    }
- return parseCsv(text);
-
+  const text = await res.text();
+  return parseCsv(text);
 }
 
 function parseCsv(csvText) {
-  // 先頭のBOM除去
-  csvText = csvText.replace(/^\uFEFF/, "");
+  // BOM除去
+  csvText = String(csvText || '').replace(/^\uFEFF/, '');
 
-  const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== "");
-  if (lines.length === 0) return [];
-
-  const headers = parseCsvLine(lines[0]).map(h => h.trim());
-
-  return lines.slice(1).map(line => {
-    const cols = parseCsvLine(line);
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = (cols[i] ?? "").trim());
-    return obj;
-  });
-}
-
-// 1行をCSVとして解析（"..." 内のカンマを無視）
-function parseCsvLine(line){
-  const out = [];
-  let cur = "";
+  // CSV全体を1文字ずつ走査して、引用符内の改行・カンマを正しく扱う
+  const rows = [];
+  let row = [];
+  let cur = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++){
-    const ch = line[i];
+  for (let i = 0; i < csvText.length; i++){
+    const ch = csvText[i];
 
     if (ch === '"'){
-      // "" はエスケープされた "
-      if (inQuotes && line[i+1] === '"'){
+      // "" は " を意味する
+      if (inQuotes && csvText[i + 1] === '"'){
         cur += '"';
         i++;
       } else {
@@ -400,39 +276,50 @@ function parseCsvLine(line){
       continue;
     }
 
-    if (ch === ',' && !inQuotes){
-      out.push(cur);
-      cur = "";
+    if (!inQuotes && ch === ','){
+      row.push(cur);
+      cur = '';
+      continue;
+    }
+
+    if (!inQuotes && (ch === '\n' || ch === '\r')){
+      // CRLF対応
+      if (ch === '\r' && csvText[i + 1] === '\n') i++;
+      row.push(cur);
+      cur = '';
+      // 空行はスキップ
+      if (row.some(v => String(v).trim() !== '')) rows.push(row);
+      row = [];
       continue;
     }
 
     cur += ch;
   }
-  out.push(cur);
-  return out;
-}
-  
-function normalizeImageUrl(u){
-  if (!u) return "";
-  u = String(u).trim().replace(/\\/g, "/"); // \ を / に
 
-  // すでに絶対URLならそのまま
-  if (/^(https?:)?\/\//.test(u) || u.startsWith("data:")) return u;
+  // 最終行
+  row.push(cur);
+  if (row.some(v => String(v).trim() !== '')) rows.push(row);
 
-  // 相対パスは「いま開いてるページ」を基準に絶対URL化
-  try { return new URL(u, location.href).href; }
-  catch { return u; }
+  if (rows.length === 0) return [];
+
+  const headers = rows[0].map(h => String(h || '').trim());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, idx) => {
+      obj[h] = String(r[idx] ?? '').trim();
+    });
+    return obj;
+  });
 }
+
+
 
 // GoogleドライブのサムネURL
 function driveThumb(url) {
-  const u = normalizeImageUrl(url);
-  if (!u) return "";
-
-  // Google Drive の場合だけ thumbnail に変換
-  const m = u.match(/id=([^&]+)/);
-  if (!m) return u;
-
+  if (!url) return "";
+  // ?id=xxxx or uc?export=view&id=xxxx 両方ざっくり対応
+  const m = url.match(/id=([^&]+)/);
+  if (!m) return url;
   const id = m[1];
   return "https://drive.google.com/thumbnail?id=" + id + "&sz=w400";
 }
@@ -550,14 +437,13 @@ function renderSearch(){
       const over = deckCount > COPY_LIMIT;
       badges += '<span class="badge' + (over ? ' badge-over' : '') + '">デッキ ' + deckCount + '枚</span>';
     }
-    const rawUrl = normalizeImageUrl(c.image);
-    const linkHtml = rawUrl
-      ? '<div><a href="' + rawUrl + '" target="_blank" rel="noopener">元画像を開く</a></div>'
+    const linkHtml = c.image
+      ? '<div><a href="' + c.image + '" target="_blank" rel="noopener">元画像を開く</a></div>'
       : "";
-
 
     info.innerHTML =
       '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
+      + (c.text || "") + '<br>'
       + '<small>' + (c.id || "") + '</small>'
       + linkHtml;
 
@@ -588,7 +474,7 @@ function renderSearch(){
 
 // ====== デッキ描画 ======
 function renderDeck(){
-   // リーダー表示
+  // リーダー表示
   if (!leaderId){
     leaderSlotEl.textContent = "未選択";
   } else {
@@ -613,10 +499,6 @@ function renderDeck(){
   const overDeck = total > DECK_LIMIT;
   deckCountEl.innerHTML = "デッキ枚数: " + total + " / " + DECK_LIMIT
     + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
-     // スマホ下バーの表示更新
-   if (deckBarCount) {
-     deckBarCount.textContent = `${total}/${DECK_LIMIT}`;
-    }
 
   const ids = Object.keys(deck);
   if (ids.length === 0){
@@ -643,9 +525,7 @@ function renderDeck(){
       img.className = "deck-card-thumb";
       img.src = thumb;
       img.alt = card.name || "";
-      img.onerror = function(){
-        this.style.display = "none";
-      };
+      img.onerror = function(){ this.style.display = "none"; };
       left.appendChild(img);
     }
 
@@ -662,12 +542,12 @@ function renderDeck(){
 
     const btns = document.createElement('span');
     const minusBtn = document.createElement('button');
-    minusBtn.className = "deck-stepper";
     minusBtn.textContent = "−";
+    minusBtn.style.fontSize = "11px";
     minusBtn.onclick = () => removeFromDeck(id);
     const plusBtn = document.createElement('button');
-    plusBtn.className = "deck-stepper";
     plusBtn.textContent = "+";
+    plusBtn.style.fontSize = "11px";
     plusBtn.onclick = () => addToDeck(id);
     btns.appendChild(minusBtn);
     btns.appendChild(plusBtn);
@@ -679,181 +559,6 @@ function renderDeck(){
     deckListEl.appendChild(row);
   });
 }
-function waitImagesLoaded(container, timeoutMs = 3000){
-  const imgs = Array.from(container.querySelectorAll('img'));
-
-  return new Promise(resolve => {
-    let done = false;
-
-    const timer = setTimeout(() => {
-      if (done) return;
-      done = true;
-      resolve();
-    }, timeoutMs);
-
-    if (imgs.length === 0){
-      clearTimeout(timer);
-      done = true;
-      resolve();
-      return;
-    }
-
-    let loadedCount = 0;
-
-    imgs.forEach(img => {
-      const onFinish = () => {
-        loadedCount++;
-        if (loadedCount >= imgs.length && !done){
-          clearTimeout(timer);
-          done = true;
-          resolve();
-        }
-      };
-
-      if (img.complete){
-        onFinish();
-      } else {
-        img.onload = onFinish;
-        img.onerror = onFinish; // エラーでも進む
-      }
-    });
-  });
-}
-
-async function exportDeckAsImage(){
-  const overlay = document.getElementById('exportOverlay');
-  if (overlay) overlay.style.display = 'flex';
-
-  // 画像要素を作る共通関数（★ここが肝）
-  function makeImg(src, widthPx){
-    const img = document.createElement('img');
-    img.crossOrigin = "anonymous";        // ★CORS
-    img.referrerPolicy = "no-referrer";  // ★Drive系で効くことがある
-    img.src = src;
-    img.style.width = widthPx + "px";
-    img.style.border = "1px solid #999";
-    return img;
-  }
-
-  try {
-    // ===== 保存用DOMを作る =====
-    const wrap = document.createElement('div');
-    wrap.style.background = '#ffffff';
-    wrap.style.color = '#000';
-    wrap.style.padding = '16px';
-    wrap.style.width = '360px';
-    wrap.style.boxSizing = 'border-box';
-    wrap.style.fontFamily = 'sans-serif';
-
-    // タイトル
-    const title = document.createElement('div');
-    title.textContent = 'ニベルアリーナ デッキ';
-    title.style.fontSize = '18px';
-    title.style.fontWeight = 'bold';
-    title.style.marginBottom = '6px';
-    wrap.appendChild(title);
-
-    // 日付・枚数
-    const meta = document.createElement('div');
-    meta.style.fontSize = '12px';
-    meta.style.marginBottom = '10px';
-    const total = Object.values(deck).reduce((a,b)=>a+b,0);
-    const now = new Date();
-    meta.textContent = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}　デッキ枚数：${total}`;
-    wrap.appendChild(meta);
-
-    // ===== リーダー =====
-    if (leaderId){
-      const leader = cards.find(c => c.id === leaderId);
-      if (leader){
-        const sec = document.createElement('div');
-        sec.style.marginBottom = '10px';
-        sec.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">リーダー</div>`;
-
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '8px';
-
-        const leaderThumb = driveThumb(leader.image);
-        if (leaderThumb){
-          row.appendChild(makeImg(leaderThumb, 64));
-        }
-
-        const name = document.createElement('div');
-        name.innerHTML = `<div>${leader.name}</div><div style="font-size:11px;color:#555;">${leader.id}</div>`;
-        row.appendChild(name);
-
-        sec.appendChild(row);
-        wrap.appendChild(sec);
-      }
-    }
-
-    // 区切り線
-    const hr = document.createElement('hr');
-    hr.style.margin = '8px 0';
-    wrap.appendChild(hr);
-
-    // ===== デッキ本体（1カード1行） =====
-    const ids = Object.keys(deck).sort();
-    ids.forEach(id => {
-      const card = cards.find(c => c.id === id);
-      if (!card) return;
-
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.gap = '8px';
-      row.style.marginBottom = '6px';
-
-      const thumb = driveThumb(card.image);
-      if (thumb){
-        row.appendChild(makeImg(thumb, 56));
-      }
-
-      const text = document.createElement('div');
-      text.style.flex = '1';
-      text.innerHTML =
-        `<div>${card.name} × ${deck[id]}</div>
-         <div style="font-size:11px;color:#555;">${card.id}</div>`;
-      row.appendChild(text);
-
-      wrap.appendChild(row);
-    });
-
-    // ===== 画面外に配置して画像化 =====
-    wrap.style.position = 'fixed';
-    wrap.style.left = '-10000px';
-    wrap.style.top = '0';
-    document.body.appendChild(wrap);
-
-    // ★画像の読み込みを待つ（少し長めに）
-    await waitImagesLoaded(wrap, 8000);
-
-    const canvas = await html2canvas(wrap, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      useCORS: true
-    });
-
-    document.body.removeChild(wrap);
-
-    // ===== ダウンロード =====
-    const a = document.createElement('a');
-    const stamp =
-      now.getFullYear() +
-      String(now.getMonth()+1).padStart(2,'0') +
-      String(now.getDate()).padStart(2,'0') +
-      String(now.getHours()).padStart(2,'0') +
-      String(now.getMinutes()).padStart(2,'0');
-    a.download = `nibel_deck_${stamp}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-
-  } finally {
-    if (overlay) overlay.style.display = 'none';
-  }
-}
 
 // ====== 初期化 ======
 (async function init(){
@@ -862,27 +567,10 @@ async function exportDeckAsImage(){
     renderSearch();
     renderDeck();
   }catch(e){
-  console.error(e);
-  const msg = (e && e.message) ? e.message : String(e);
-  searchCountEl.textContent =
-    'カードリスト(cards.csv)の読み込みに失敗しました：' + msg;
+    console.error(e);
+    searchCountEl.textContent = 'カードリスト(cards.csv)の読み込みに失敗しました。パスとファイル名を確認してください。';
   }
-
 })();
 </script>
-<div id="exportOverlay" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  color:#fff;
-  font-size:16px;
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-">
-  <div>画像を生成しています…</div>
-</div>
-
 </body>
 </html>
