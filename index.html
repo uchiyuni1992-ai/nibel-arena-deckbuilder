@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>ニベルアリーナ デッキビルダー（Live Server版）</title>
+<title>ニベルアリーナ デッキビルダー（非公式）</title>
 
 <style>
 body{
@@ -353,28 +353,34 @@ setFilterEl.addEventListener('change', renderSearch);
 
 // ====== CSV読み込み ======
 async function loadCardsFromCsv() {
-  const res = await fetch('cards.csv'); // index.html と同じフォルダ
+  const res = await fetch('cards.csv?ts=' + Date.now()); // index.html と同じフォルダ
   if (!res.ok) throw new Error('cards.csv の読み込みに失敗: ' + res.status);
-  const text = await res.text();
-  return (text);
+   const text = await res.text();
+   if (text.trim().startsWith("<!DOCTYPE html")) {
+    throw new Error("cards.csv が取れず、HTML(404ページ等)が返っています。配置場所を確認してください。");
+    }
+ return parseCsv(text);
+
 }
 
 function parseCsv(csvText) {
-  const lines = csvText.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+  // 先頭のBOM除去
+  csvText = csvText.replace(/^\uFEFF/, "");
+
+  const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== "");
   if (lines.length === 0) return [];
 
-  const headers = parseCsvLine(lines[0]);
-  return lines.slice(1).filter(l => l.trim() !== "").map(line => {
+  const headers = parseCsvLine(lines[0]).map(h => h.trim());
+
+  return lines.slice(1).map(line => {
     const cols = parseCsvLine(line);
     const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = cols[i] !== undefined ? cols[i] : '';
-    });
+    headers.forEach((h, i) => obj[h] = (cols[i] ?? "").trim());
     return obj;
   });
 }
 
-// 1行をCSVとしてパース（"..." と "" エスケープ対応）
+// 1行をCSVとして解析（"..." 内のカンマを無視）
 function parseCsvLine(line){
   const out = [];
   let cur = "";
@@ -384,19 +390,23 @@ function parseCsvLine(line){
     const ch = line[i];
 
     if (ch === '"'){
-      // "" は " を意味する
-      if (inQuotes && line[i + 1] === '"'){
+      // "" はエスケープされた "
+      if (inQuotes && line[i+1] === '"'){
         cur += '"';
         i++;
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (ch === ',' && !inQuotes){
+      continue;
+    }
+
+    if (ch === ',' && !inQuotes){
       out.push(cur);
       cur = "";
-    } else {
-      cur += ch;
+      continue;
     }
+
+    cur += ch;
   }
   out.push(cur);
   return out;
@@ -833,9 +843,12 @@ async function exportDeckAsImage(){
     renderSearch();
     renderDeck();
   }catch(e){
-    console.error(e);
-    searchCountEl.textContent = 'カードリスト(cards.csv)の読み込みに失敗しました。パスとファイル名を確認してください。';
+  console.error(e);
+  const msg = (e && e.message) ? e.message : String(e);
+  searchCountEl.textContent =
+    'カードリスト(cards.csv)の読み込みに失敗しました：' + msg;
   }
+
 })();
 </script>
 <div id="exportOverlay" style="
