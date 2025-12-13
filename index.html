@@ -621,9 +621,50 @@ function renderDeck(){
     deckListEl.appendChild(row);
   });
 }
+function waitImagesLoaded(container, timeoutMs = 3000){
+  const imgs = Array.from(container.querySelectorAll('img'));
+
+  return new Promise(resolve => {
+    let done = false;
+
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      resolve();
+    }, timeoutMs);
+
+    if (imgs.length === 0){
+      clearTimeout(timer);
+      done = true;
+      resolve();
+      return;
+    }
+
+    let loadedCount = 0;
+
+    imgs.forEach(img => {
+      const onFinish = () => {
+        loadedCount++;
+        if (loadedCount >= imgs.length && !done){
+          clearTimeout(timer);
+          done = true;
+          resolve();
+        }
+      };
+
+      if (img.complete){
+        onFinish();
+      } else {
+        img.onload = onFinish;
+        img.onerror = onFinish; // エラーでも進む
+      }
+    });
+  });
+}
+
 async function exportDeckAsImage(){
   document.getElementById('exportOverlay').style.display = 'flex';
-
+try {
   // ===== 保存用DOMを作る =====
   const wrap = document.createElement('div');
   wrap.style.background = '#ffffff';
@@ -741,7 +782,10 @@ const canvas = await html2canvas(wrap, {
   a.href = canvas.toDataURL('image/png');
   document.getElementById('exportOverlay').style.display = 'none';
 
-  a.click();
+  a.click(); 
+} finally {
+    if (overlay) overlay.style.display = 'none';
+  }
 }
 
 // ====== 初期化 ======
