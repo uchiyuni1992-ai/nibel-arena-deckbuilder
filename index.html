@@ -225,9 +225,11 @@ button{cursor:pointer;}
       <div class="filter-block">
         <span class="filter-label">色フィルター：</span>
         <div id="colorFilter">
-          <label><input type="checkbox" value="黄">黄</label>
           <label><input type="checkbox" value="赤">赤</label>
+          <label><input type="checkbox" value="緑">緑</label>
+          <label><input type="checkbox" value="紫">紫</label>
           <label><input type="checkbox" value="青">青</label>
+          <label><input type="checkbox" value="黄">黄</label>
           <!-- 必要ならここに増やす（緑 / 紫 / 無 / 多色 など） -->
         </div>
       </div>
@@ -236,7 +238,12 @@ button{cursor:pointer;}
         <label class="filter-label" for="setFilter">弾フィルター：</label>
         <select id="setFilter">
           <option value="">すべての弾</option>
+          <option value="BT01">BT01</option>
           <option value="BT02">BT02</option>
+          <option value="ST01">ST01</option>
+          <option value="ST02">ST02</option>
+          <option value="ST03">ST03</option>
+          <option value="ST04">ST04</option>
           <option value="ST05">ST05</option>
           <!-- 新しい弾を追加したらここに option を足す -->
         </select>
@@ -299,7 +306,8 @@ const colorFilterEl  = document.getElementById('colorFilter');
 const setFilterEl    = document.getElementById('setFilter');
 const deckBarToggle = document.getElementById('deckBarToggle');
 const deckBarCount  = document.getElementById('deckBarCount');
-
+const exportDeckImgBtn = document.getElementById('exportDeckImgBtn');
+  
 // ====== イベント ======
 input.addEventListener('input', renderSearch);
 clearLeaderBtn.addEventListener('click', () => {
@@ -314,6 +322,10 @@ clearDeckBtn.addEventListener('click', () => {
   renderDeck();
   renderSearch();
 });
+  exportDeckImgBtn.addEventListener('click', exportDeckAsImage);
+
+  <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
+
 // スマホ下バー：開閉
 if (deckBarToggle) {
   deckBarToggle.addEventListener('click', () => {
@@ -594,6 +606,38 @@ function renderDeck(){
     deckListEl.appendChild(row);
   });
 }
+async function exportDeckAsImage(){
+  const target = document.getElementById('deckArea');
+
+  // sticky解除（スマホ対策）
+  const prevPos = target.style.position;
+  const prevTop = target.style.top;
+  target.style.position = "static";
+  target.style.top = "auto";
+
+  const canvas = await html2canvas(target, {
+    backgroundColor: "#ffffff",
+    scale: 2,
+    useCORS: true
+  });
+
+  // 元に戻す
+  target.style.position = prevPos;
+  target.style.top = prevTop;
+
+  const a = document.createElement('a');
+  const now = new Date();
+  const stamp =
+    now.getFullYear() +
+    String(now.getMonth()+1).padStart(2,'0') +
+    String(now.getDate()).padStart(2,'0') +
+    String(now.getHours()).padStart(2,'0') +
+    String(now.getMinutes()).padStart(2,'0');
+
+  a.download = `nibel_deck_${stamp}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
 
 // ====== 初期化 ======
 (async function init(){
@@ -607,5 +651,7 @@ function renderDeck(){
   }
 })();
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 </body>
 </html>
