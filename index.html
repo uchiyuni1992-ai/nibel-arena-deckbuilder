@@ -163,6 +163,60 @@ button{cursor:pointer;}
     padding:6px 10px;
   }
 }
+
+/* PCでもデッキ欄を固定表示（スクロールで隠れない） */
+@media (min-width:701px){
+  #deckArea{
+    position:sticky;
+    top:10px;
+    align-self:flex-start;
+    max-height:calc(100vh - 20px);
+    overflow:auto;
+  }
+}
+
+/* デッキ欄：グリッド表示 */
+.deck-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:6px;
+  margin-top:6px;
+}
+@media (min-width:701px){
+  .deck-grid{ grid-template-columns:repeat(5, 1fr); }
+}
+.deck-cell{
+  position:relative;
+}
+.deck-cell img{
+  width:100%;
+  display:block;
+  border:1px solid #999;
+  background:#eee;
+  border-radius:2px;
+}
+.deck-badge{
+  position:absolute;
+  top:4px;
+  right:4px;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  font-size:12px;
+  font-weight:bold;
+  padding:2px 6px;
+  border-radius:999px;
+}
+.deck-cell-controls{
+  display:flex;
+  gap:4px;
+  margin-top:4px;
+}
+.deck-cell-controls button{
+  flex:1;
+  font-size:14px;
+  padding:4px 0;
+}
+
 </style>
 </head>
 
@@ -231,6 +285,7 @@ button{cursor:pointer;}
       <div id="deckCount" class="count"></div>
       <div id="deckList"></div>
       <button id="clearDeckBtn" style="margin-top:4px;font-size:11px;">デッキをリセット</button>
+      <button id="toggleDeckViewBtn" style="margin-top:4px;font-size:11px;">表示：リスト</button>
       <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
     </div>
   </div>
@@ -249,6 +304,14 @@ let cards = [];          // CSVから読み込んだカード
 let leaderId = null;     // 現在のリーダー
 const deck = {};         // { id: 枚数 }
 
+
+let deckView = localStorage.getItem('deckView') || 'list'; // 'list' or 'grid'
+function updateDeckViewBtn(){
+  if (!toggleDeckViewBtn) return;
+  toggleDeckViewBtn.textContent = '表示：' + (deckView === 'grid' ? 'グリッド' : 'リスト');
+}
+
+
 // ====== DOM取得 ======
 const input        = document.getElementById('q');
 const list         = document.getElementById('list');
@@ -261,6 +324,7 @@ const clearDeckBtn   = document.getElementById('clearDeckBtn');
 const colorFilterEl  = document.getElementById('colorFilter');
 const setFilterEl    = document.getElementById('setFilter');
 const exportDeckImgBtn = document.getElementById('exportDeckImgBtn');
+const toggleDeckViewBtn = document.getElementById('toggleDeckViewBtn');
 const exportOverlay    = document.getElementById('exportOverlay');
 
 // ====== イベント ======
@@ -280,6 +344,12 @@ clearDeckBtn.addEventListener('click', () => {
 colorFilterEl.addEventListener('change', renderSearch);
 setFilterEl.addEventListener('change', renderSearch);
 if (exportDeckImgBtn) exportDeckImgBtn.addEventListener('click', exportDeckAsImage);
+if (toggleDeckViewBtn) toggleDeckViewBtn.addEventListener('click', () => {
+  deckView = (deckView === 'list') ? 'grid' : 'list';
+  localStorage.setItem('deckView', deckView);
+  updateDeckViewBtn();
+  renderDeck();
+});
 
 // ====== CSV読み込み ======
 async function loadCardsFromCsv() {
@@ -564,6 +634,62 @@ function renderDeck(){
   }
 
   ids.sort();
+
+  // === 表示切替：リスト / グリッド ===
+  if (deckView === 'grid'){
+    const grid = document.createElement('div');
+    grid.className = 'deck-grid';
+
+    ids.forEach(id => {
+      const count = deck[id];
+      const card = cards.find(c => c.id === id) || {id, name:""};
+
+      const cell = document.createElement('div');
+      cell.className = 'deck-cell';
+
+      const thumb = driveThumb(card.image);
+      if (thumb){
+        const img = document.createElement('img');
+        img.src = thumb;
+        img.alt = card.name || "";
+        img.onerror = function(){ this.style.display = "none"; };
+        cell.appendChild(img);
+      } else {
+        const ph = document.createElement('div');
+        ph.style.height = '80px';
+        ph.style.border = '1px solid #999';
+        ph.style.background = '#eee';
+        cell.appendChild(ph);
+      }
+
+      const badge = document.createElement('div');
+      badge.className = 'deck-badge';
+      badge.textContent = String(count);
+      cell.appendChild(badge);
+
+      const controls = document.createElement('div');
+      controls.className = 'deck-cell-controls';
+
+      const minusBtn = document.createElement('button');
+      minusBtn.textContent = "−";
+      minusBtn.onclick = () => removeFromDeck(id);
+
+      const plusBtn = document.createElement('button');
+      plusBtn.textContent = "+";
+      plusBtn.onclick = () => addToDeck(id);
+
+      controls.appendChild(minusBtn);
+      controls.appendChild(plusBtn);
+
+      cell.appendChild(controls);
+      grid.appendChild(cell);
+    });
+
+    deckListEl.appendChild(grid);
+    return;
+  }
+
+  // === リスト表示（従来） ===
   ids.forEach(id => {
     const count = deck[id];
     const card = cards.find(c => c.id === id) || {id, name:""};
@@ -613,7 +739,7 @@ function renderDeck(){
 
     deckListEl.appendChild(row);
   });
-}
+
 
 function waitImagesLoaded(container, timeoutMs = 8000){
   const imgs = Array.from(container.querySelectorAll('img'));
@@ -718,29 +844,51 @@ async function exportDeckAsImage(){
   hr.style.margin = '8px 0';
   wrap.appendChild(hr);
 
-  // デッキ（1カード1行）
+    // デッキ（カードだけをグリッドで並べる）
+  const grid = document.createElement('div');
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = 'repeat(5, 1fr)'; // UA風：5列
+  grid.style.gap = '6px';
+  grid.style.marginTop = '8px';
+
   const ids = Object.keys(deck).sort();
   ids.forEach(id => {
     const card = cards.find(c => c.id === id);
     if (!card) return;
 
-    const row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.alignItems = 'center';
-    row.style.gap = '8px';
-    row.style.marginBottom = '6px';
+    const count = deck[id] || 0;
+
+    const cell = document.createElement('div');
+    cell.style.position = 'relative';
 
     const thumb = driveThumb(card.image);
-    if (thumb) row.appendChild(makeImg(thumb, 56));
+    const img = document.createElement('img');
+    img.crossOrigin = "anonymous";
+    img.referrerPolicy = "no-referrer";
+    img.src = thumb;
+    img.style.width = '100%';
+    img.style.display = 'block';
+    img.style.border = '1px solid #999';
+    img.style.background = '#eee';
+    cell.appendChild(img);
 
-    const text = document.createElement('div');
-    text.style.flex = '1';
-    text.innerHTML = `<div>${card.name || ""} × ${deck[id]}</div><div style="font-size:11px;color:#555;">${card.id || ""}</div>`;
-    row.appendChild(text);
+    const badge = document.createElement('div');
+    badge.textContent = String(count);
+    badge.style.position = 'absolute';
+    badge.style.top = '4px';
+    badge.style.right = '4px';
+    badge.style.background = 'rgba(0,0,0,0.75)';
+    badge.style.color = '#fff';
+    badge.style.fontSize = '12px';
+    badge.style.fontWeight = 'bold';
+    badge.style.padding = '2px 6px';
+    badge.style.borderRadius = '999px';
+    cell.appendChild(badge);
 
-    wrap.appendChild(row);
+    grid.appendChild(cell);
   });
 
+  wrap.appendChild(grid);
   // 画面外に配置してキャプチャ
   wrap.style.position = 'fixed';
   wrap.style.left = '-10000px';
@@ -775,6 +923,7 @@ async function exportDeckAsImage(){
 (async function init(){
   try{
     cards = await loadCardsFromCsv();
+    updateDeckViewBtn();
     renderSearch();
     renderDeck();
   }catch(e){
