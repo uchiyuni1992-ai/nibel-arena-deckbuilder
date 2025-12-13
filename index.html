@@ -137,6 +137,31 @@ button{cursor:pointer;}
 
 @media (max-width:700px){
   #layout{flex-direction:column;}
+
+  /* スマホではデッキ欄を上に固定して常時表示 */
+  #deckArea{
+    order:-1;
+    position:sticky;
+    top:0;
+    z-index:10;
+    max-height:32vh;
+    overflow:auto;
+    padding:6px;
+  }
+
+  /* デッキ側の余白を少し詰める */
+  #deckArea h2{ margin:2px 0; }
+  #deckArea hr{ margin:6px 0; }
+
+  /* デッキ操作ボタンを押しやすく */
+  #deckArea button{
+    font-size:13px;
+    padding:6px 10px;
+  }
+  .deck-card-row button{
+    font-size:16px !important;
+    padding:6px 10px;
+  }
 }
 </style>
 </head>
@@ -206,11 +231,13 @@ button{cursor:pointer;}
       <div id="deckCount" class="count"></div>
       <div id="deckList"></div>
       <button id="clearDeckBtn" style="margin-top:4px;font-size:11px;">デッキをリセット</button>
+      <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
     </div>
   </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 // ====== 設定 ======
 const DECK_LIMIT = 40;   // デッキ目安枚数
@@ -233,6 +260,8 @@ const clearLeaderBtn = document.getElementById('clearLeaderBtn');
 const clearDeckBtn   = document.getElementById('clearDeckBtn');
 const colorFilterEl  = document.getElementById('colorFilter');
 const setFilterEl    = document.getElementById('setFilter');
+const exportDeckImgBtn = document.getElementById('exportDeckImgBtn');
+const exportOverlay    = document.getElementById('exportOverlay');
 
 // ====== イベント ======
 input.addEventListener('input', renderSearch);
@@ -250,6 +279,7 @@ clearDeckBtn.addEventListener('click', () => {
 });
 colorFilterEl.addEventListener('change', renderSearch);
 setFilterEl.addEventListener('change', renderSearch);
+if (exportDeckImgBtn) exportDeckImgBtn.addEventListener('click', exportDeckAsImage);
 
 // ====== CSV読み込み ======
 async function loadCardsFromCsv() {
@@ -321,12 +351,29 @@ function parseCsv(csvText) {
 
 
 
+// 画像URLを正規化（/images/... でも pages 配下を指すようにする）
+function baseDir(){
+  return location.origin + location.pathname.replace(/[^\/]*$/, "");
+}
+function normalizeImageUrl(u){
+  if (!u) return "";
+  u = String(u).trim().replace(/\\/g, "/");
+  if (/^https?:\/\//i.test(u) || u.startsWith("data:")) return u;
+
+  // /images/... を「サイト配下(images/...)」へ補正
+  if (u.startsWith("/images/")) return baseDir() + u.slice(1);
+  if (u.startsWith("/image/"))  return baseDir() + "images/" + u.split("/").pop(); // 念のため旧 image フォルダも救済
+
+  if (u.startsWith("./")) u = u.slice(2);
+  return baseDir() + u.replace(/^\//, "");
+}
 // GoogleドライブのサムネURL
 function driveThumb(url) {
-  if (!url) return "";
-  // ?id=xxxx or uc?export=view&id=xxxx 両方ざっくり対応
-  const m = url.match(/id=([^&]+)/);
-  if (!m) return url;
+  const u = normalizeImageUrl(url);
+  if (!u) return "";
+  // Google Drive のときだけ thumbnail に変換
+  const m = u.match(/id=([^&]+)/);
+  if (!m) return u;
   const id = m[1];
   return "https://drive.google.com/thumbnail?id=" + id + "&sz=w400";
 }
@@ -444,8 +491,9 @@ function renderSearch(){
       const over = deckCount > COPY_LIMIT;
       badges += '<span class="badge' + (over ? ' badge-over' : '') + '">デッキ ' + deckCount + '枚</span>';
     }
-    const linkHtml = c.image
-      ? '<div><a href="' + c.image + '" target="_blank" rel="noopener">元画像を開く</a></div>'
+    const rawUrl = normalizeImageUrl(c.image);
+    const linkHtml = rawUrl
+      ? '<div><a href="' + rawUrl + '" target="_blank" rel="noopener">元画像を開く</a></div>'
       : "";
 
     info.innerHTML =
@@ -567,6 +615,162 @@ function renderDeck(){
   });
 }
 
+function waitImagesLoaded(container, timeoutMs = 8000){
+  const imgs = Array.from(container.querySelectorAll('img'));
+  return new Promise(resolve => {
+    let done = false;
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      resolve();
+    }, timeoutMs);
+
+    if (imgs.length === 0){
+      clearTimeout(timer);
+      done = true;
+      resolve();
+      return;
+    }
+
+    let loadedCount = 0;
+    imgs.forEach(img => {
+      const onFinish = () => {
+        loadedCount++;
+        if (loadedCount >= imgs.length && !done){
+          clearTimeout(timer);
+          done = true;
+          resolve();
+        }
+      };
+      if (img.complete) onFinish();
+      else {
+        img.onload = onFinish;
+        img.onerror = onFinish;
+      }
+    });
+  });
+}
+
+async function exportDeckAsImage(){
+  if (!exportDeckImgBtn) return;
+  if (exportOverlay) exportOverlay.style.display = 'flex';
+
+  // 保存専用DOMを生成（スクロール無しで全カードを1枚に）
+  const wrap = document.createElement('div');
+  wrap.style.background = '#fff';
+  wrap.style.color = '#000';
+  wrap.style.padding = '16px';
+  wrap.style.width = '360px';
+  wrap.style.boxSizing = 'border-box';
+  wrap.style.fontFamily = 'sans-serif';
+
+  const title = document.createElement('div');
+  title.textContent = 'ニベルアリーナ デッキ';
+  title.style.fontSize = '18px';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '6px';
+  wrap.appendChild(title);
+
+  const meta = document.createElement('div');
+  meta.style.fontSize = '12px';
+  meta.style.marginBottom = '10px';
+  const total = currentDeckCount();
+  const now = new Date();
+  meta.textContent = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}　デッキ枚数：${total}`;
+  wrap.appendChild(meta);
+
+  function makeImg(src, w){
+    const img = document.createElement('img');
+    img.crossOrigin = "anonymous";
+    img.referrerPolicy = "no-referrer";
+    img.src = src;
+    img.style.width = w + "px";
+    img.style.border = "1px solid #999";
+    img.style.background = "#eee";
+    return img;
+  }
+
+  // リーダー
+  if (leaderId){
+    const leader = cards.find(c => c.id === leaderId);
+    if (leader){
+      const sec = document.createElement('div');
+      sec.style.marginBottom = '10px';
+      sec.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">リーダー</div>`;
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+
+      const thumb = driveThumb(leader.image);
+      if (thumb) row.appendChild(makeImg(thumb, 64));
+
+      const name = document.createElement('div');
+      name.innerHTML = `<div>${leader.name || ""}</div><div style="font-size:11px;color:#555;">${leader.id || ""}</div>`;
+      row.appendChild(name);
+
+      sec.appendChild(row);
+      wrap.appendChild(sec);
+    }
+  }
+
+  const hr = document.createElement('hr');
+  hr.style.margin = '8px 0';
+  wrap.appendChild(hr);
+
+  // デッキ（1カード1行）
+  const ids = Object.keys(deck).sort();
+  ids.forEach(id => {
+    const card = cards.find(c => c.id === id);
+    if (!card) return;
+
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    row.style.marginBottom = '6px';
+
+    const thumb = driveThumb(card.image);
+    if (thumb) row.appendChild(makeImg(thumb, 56));
+
+    const text = document.createElement('div');
+    text.style.flex = '1';
+    text.innerHTML = `<div>${card.name || ""} × ${deck[id]}</div><div style="font-size:11px;color:#555;">${card.id || ""}</div>`;
+    row.appendChild(text);
+
+    wrap.appendChild(row);
+  });
+
+  // 画面外に配置してキャプチャ
+  wrap.style.position = 'fixed';
+  wrap.style.left = '-10000px';
+  wrap.style.top = '0';
+  document.body.appendChild(wrap);
+
+  try{
+    await waitImagesLoaded(wrap, 8000);
+    const canvas = await html2canvas(wrap, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true
+    });
+
+    const a = document.createElement('a');
+    const stamp =
+      now.getFullYear() +
+      String(now.getMonth()+1).padStart(2,'0') +
+      String(now.getDate()).padStart(2,'0') +
+      String(now.getHours()).padStart(2,'0') +
+      String(now.getMinutes()).padStart(2,'0');
+    a.download = `nibel_deck_${stamp}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } finally {
+    document.body.removeChild(wrap);
+    if (exportOverlay) exportOverlay.style.display = 'none';
+  }
+}
+
 // ====== 初期化 ======
 (async function init(){
   try{
@@ -579,5 +783,9 @@ function renderDeck(){
   }
 })();
 </script>
+
+<div id="exportOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);color:#fff;font-size:16px;z-index:9999;align-items:center;justify-content:center;">
+  <div>画像を生成しています…</div>
+</div>
 </body>
 </html>
