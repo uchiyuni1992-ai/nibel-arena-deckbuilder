@@ -356,21 +356,50 @@ async function loadCardsFromCsv() {
   const res = await fetch('cards.csv'); // index.html と同じフォルダ
   if (!res.ok) throw new Error('cards.csv の読み込みに失敗: ' + res.status);
   const text = await res.text();
-  return parseCsv(text);
+  return (text);
 }
 
 function parseCsv(csvText) {
-  const lines = csvText.trim().split(/\r?\n/);
+  const lines = csvText.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
   if (lines.length === 0) return [];
-  const headers = lines[0].split(',');
-  return lines.slice(1).map(line => {
-    const cols = line.split(',');
+
+  const headers = parseCsvLine(lines[0]);
+  return lines.slice(1).filter(l => l.trim() !== "").map(line => {
+    const cols = parseCsvLine(line);
     const obj = {};
-    headers.forEach((h,i) => {
+    headers.forEach((h, i) => {
       obj[h] = cols[i] !== undefined ? cols[i] : '';
     });
     return obj;
   });
+}
+
+// 1行をCSVとしてパース（"..." と "" エスケープ対応）
+function parseCsvLine(line){
+  const out = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++){
+    const ch = line[i];
+
+    if (ch === '"'){
+      // "" は " を意味する
+      if (inQuotes && line[i + 1] === '"'){
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes){
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
 }
 
 // GoogleドライブのサムネURL
