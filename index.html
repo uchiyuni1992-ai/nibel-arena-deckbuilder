@@ -644,10 +644,10 @@ function renderDeck(){
       img.src = thumb;
       img.alt = card.name || "";
       img.onerror = function(){
-       this.style.border = "2px solid red";
-       this.alt = "IMG LOAD ERROR";
-    };
-
+        this.style.display = "none";
+      };
+      left.appendChild(img);
+    }
 
     const nameSpan = document.createElement('span');
     nameSpan.className = "deck-card-name";
