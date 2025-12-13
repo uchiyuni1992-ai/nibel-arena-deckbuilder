@@ -277,10 +277,13 @@ button{cursor:pointer;}
       <div id="deckCount" class="count"></div>
       <div id="deckList"></div>
       <button id="clearDeckBtn" style="margin-top:4px;font-size:11px;">デッキをリセット</button>
+      <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
     </div>
   </div>
 
 </div>
+  
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
 // ====== 設定 ======
@@ -322,9 +325,9 @@ clearDeckBtn.addEventListener('click', () => {
   renderDeck();
   renderSearch();
 });
+if (exportDeckImgBtn) {
   exportDeckImgBtn.addEventListener('click', exportDeckAsImage);
-
-  <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
+}
 
 // スマホ下バー：開閉
 if (deckBarToggle) {
@@ -651,7 +654,6 @@ async function exportDeckAsImage(){
   }
 })();
 </script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 </body>
 </html>
