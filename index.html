@@ -411,13 +411,28 @@ function parseCsvLine(line){
   out.push(cur);
   return out;
 }
+  
+function normalizeImageUrl(u){
+  if (!u) return "";
+  u = String(u).trim().replace(/\\/g, "/"); // \ を / に
+
+  // すでに絶対URLならそのまま
+  if (/^(https?:)?\/\//.test(u) || u.startsWith("data:")) return u;
+
+  // 相対パスは「いま開いてるページ」を基準に絶対URL化
+  try { return new URL(u, location.href).href; }
+  catch { return u; }
+}
 
 // GoogleドライブのサムネURL
 function driveThumb(url) {
-  if (!url) return "";
-  // ?id=xxxx or uc?export=view&id=xxxx 両方ざっくり対応
-  const m = url.match(/id=([^&]+)/);
-  if (!m) return url;
+  const u = normalizeImageUrl(url);
+  if (!u) return "";
+
+  // Google Drive の場合だけ thumbnail に変換
+  const m = u.match(/id=([^&]+)/);
+  if (!m) return u;
+
   const id = m[1];
   return "https://drive.google.com/thumbnail?id=" + id + "&sz=w400";
 }
@@ -535,9 +550,11 @@ function renderSearch(){
       const over = deckCount > COPY_LIMIT;
       badges += '<span class="badge' + (over ? ' badge-over' : '') + '">デッキ ' + deckCount + '枚</span>';
     }
-    const linkHtml = c.image
-      ? '<div><a href="' + c.image + '" target="_blank" rel="noopener">元画像を開く</a></div>'
+    const rawUrl = normalizeImageUrl(c.image);
+    const linkHtml = rawUrl
+      ? '<div><a href="' + rawUrl + '" target="_blank" rel="noopener">元画像を開く</a></div>'
       : "";
+
 
     info.innerHTML =
       '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
@@ -626,9 +643,11 @@ function renderDeck(){
       img.className = "deck-card-thumb";
       img.src = thumb;
       img.alt = card.name || "";
-      img.onerror = function(){ this.style.display = "none"; };
-      left.appendChild(img);
-    }
+      img.onerror = function(){
+       this.style.border = "2px solid red";
+       this.alt = "IMG LOAD ERROR";
+    };
+
 
     const nameSpan = document.createElement('span');
     nameSpan.className = "deck-card-name";
