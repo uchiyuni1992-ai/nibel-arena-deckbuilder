@@ -145,17 +145,17 @@ button{cursor:pointer;}
 <h1>ニベルアリーナ デッキビルダー（Live Server版）</h1>
 
 <p style="font-size:13px;">
-カード名 or テキストを入力して検索し、デッキ構築ができます。<br>
+カード名を入力して検索し、デッキ構築ができます。<br>
 ・リーダー：1枚（どのカードでも設定可）<br>
-・デッキ：40枚目安（超過時は赤表示）<br>
-・同名カード：3枚目安（超過時は赤表示）
+・デッキ：40枚（超過時は赤表示）<br>
+・同カードナンバー：3枚まで（超過時は赤表示）
 </p>
 
 <div id="layout">
 
   <!-- 検索エリア -->
   <div id="searchArea">
-    <input id="q" placeholder="例：クラウン / エグジット / 装備" />
+    <input id="q" placeholder="例：レッドフード / 紅蓮 / クラウン" />
 
     <!-- 色 & 弾フィルター -->
     <div class="filters">
@@ -258,25 +258,78 @@ if (typeFilterEl) typeFilterEl.addEventListener('change', renderSearch);
 
 // ====== CSV読み込み ======
 async function loadCardsFromCsv() {
-  const res = await fetch('cards.csv'); // index.html と同じフォルダ
+  const res = await fetch('cards.csv?ts=' + Date.now()); // index.html と同じフォルダ
   if (!res.ok) throw new Error('cards.csv の読み込みに失敗: ' + res.status);
   const text = await res.text();
   return parseCsv(text);
 }
 
 function parseCsv(csvText) {
-  const lines = csvText.trim().split(/\r?\n/);
-  if (lines.length === 0) return [];
-  const headers = lines[0].split(',');
-  return lines.slice(1).map(line => {
-    const cols = line.split(',');
+  // BOM除去
+  csvText = csvText.replace(/^\uFEFF/, "");
+
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < csvText.length; i++){
+    const ch = csvText[i];
+
+    if (ch === '"'){
+      // "" は " のエスケープ
+      if (inQuotes && csvText[i + 1] === '"'){
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (ch === ',' && !inQuotes){
+      row.push(cur);
+      cur = "";
+      continue;
+    }
+
+    // 改行（クォート外だけで行区切り）
+    if ((ch === '\n' || ch === '\r') && !inQuotes){
+      // \r\n 対応
+      if (ch === '\r' && csvText[i + 1] === '\n') i++;
+
+      row.push(cur);
+      cur = "";
+
+      // 空行はスキップ
+      if (row.some(v => String(v).trim() !== "")){
+        rows.push(row);
+      }
+      row = [];
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  // 最終行
+  row.push(cur);
+  if (row.some(v => String(v).trim() !== "")){
+    rows.push(row);
+  }
+
+  if (rows.length === 0) return [];
+
+  const headers = rows[0].map(h => String(h).trim());
+  return rows.slice(1).map(cols => {
     const obj = {};
-    headers.forEach((h,i) => {
-      obj[h] = cols[i] !== undefined ? cols[i] : '';
+    headers.forEach((h, idx) => {
+      obj[h] = cols[idx] !== undefined ? cols[idx] : "";
     });
     return obj;
   });
 }
+
 
 // GoogleドライブのサムネURL
 function driveThumb(url) {
