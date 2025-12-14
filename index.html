@@ -224,17 +224,17 @@ button{cursor:pointer;}
 <h1>ニベルアリーナ デッキビルダー（非公式）</h1>
 
 <p style="font-size:13px;">
-カード名を入力して検索し、デッキ構築ができます。<br>
-・リーダー：1枚<br>
-・デッキ：40枚（超過時は赤表示）<br>
-・同カードナンバー：3枚（超過時は赤表示）
+カード名 or テキストを入力して検索し、デッキ構築ができます。<br>
+・リーダー：1枚（どのカードでも設定可）<br>
+・デッキ：40枚目安（超過時は赤表示）<br>
+・同名カード：3枚目安（超過時は赤表示）
 </p>
 
 <div id="layout">
 
   <!-- 検索エリア -->
   <div id="searchArea">
-    <input id="q" placeholder="例：レッドフード / 紅蓮 / クラウン " />
+    <input id="q" placeholder="例：クラウン / エグジット / 装備" />
 
     <!-- 色 & 弾フィルター -->
     <div class="filters">
@@ -782,10 +782,14 @@ function waitImagesLoaded(container, timeoutMs = 8000){
 }
 
 async function exportDeckAsImage(){
+  const overlay = document.getElementById('exportOverlay');
+  if (overlay) overlay.style.display = 'flex';
+
+  try {
+
   if (!exportDeckImgBtn) return;
   if (exportOverlay) exportOverlay.style.display = 'flex';
 
-  try {
   // 保存専用DOMを生成（スクロール無しで全カードを1枚に）
   const wrap = document.createElement('div');
   wrap.style.background = '#fff';
@@ -933,9 +937,6 @@ async function exportDeckAsImage(){
     document.body.removeChild(wrap);
     if (exportOverlay) exportOverlay.style.display = 'none';
   }
-      } finally {
-    if (overlay) overlay.style.display = 'none';
-  }
 }
 
 // ====== 初期化 ======
@@ -953,6 +954,9 @@ async function exportDeckAsImage(){
     console.error(e);
     searchCountEl.textContent = 'カードリスト(cards.csv)の読み込みに失敗しました。パスとファイル名を確認してください。';
   }
+  } finally {
+    if (overlay) overlay.style.display = 'none';
+  }
 })();
 
 </script>
@@ -960,8 +964,8 @@ async function exportDeckAsImage(){
 <div id="exportOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);color:#fff;font-size:16px;z-index:9999;align-items:center;justify-content:center;">
   <div>画像を生成しています…</div>
 </div>
-  
-  <!-- 画像生成中オーバーレイ -->
+
+<!-- 画像生成中オーバーレイ -->
 <div id="exportOverlay" style="
   display:none;
   position:fixed;
