@@ -609,26 +609,29 @@ function renderSearch(){
     const btnRow = document.createElement('div');
     btnRow.className = "btn-row";
 
-    const addBtn = document.createElement('button');
-    addBtn.textContent = "+デッキ";
-    addBtn.onclick = () => addToDeck(c.id);
-
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = "−デッキ";
-    removeBtn.onclick = () => removeFromDeck(c.id);
-
-    // リーダーにできるのは type=LEADER のみ
     const t = String(c.type || '').toUpperCase();
-    let leaderBtn = null;
-    if (t === 'LEADER'){
-      leaderBtn = document.createElement('button');
-      leaderBtn.textContent = "リーダーにする";
-      leaderBtn.onclick = () => setLeader(c.id);
+
+    // デッキに入れられるのは LEADER 以外（LEADERはリーダー選択のみ）
+    if (t !== 'LEADER'){
+      const addBtn = document.createElement('button');
+      addBtn.textContent = "+デッキ";
+      addBtn.onclick = () => addToDeck(c.id);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = "−デッキ";
+      removeBtn.onclick = () => removeFromDeck(c.id);
+
+      btnRow.appendChild(addBtn);
+      btnRow.appendChild(removeBtn);
     }
 
-    btnRow.appendChild(addBtn);
-    btnRow.appendChild(removeBtn);
-    if (leaderBtn) btnRow.appendChild(leaderBtn);
+    // リーダーにできるのは type=LEADER のみ
+    if (t === 'LEADER'){
+      const leaderBtn = document.createElement('button');
+      leaderBtn.textContent = "リーダーにする";
+      leaderBtn.onclick = () => setLeader(c.id);
+      btnRow.appendChild(leaderBtn);
+    }
 
     info.appendChild(btnRow);
     div.appendChild(info);
