@@ -602,7 +602,8 @@ function renderSearch(){
       : "";
 
     info.innerHTML =
-      '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
+     '<b>' + (c.name || "(名称なし)") + '</b>' + badges + '<br>'
+      + 'トリガー：' + (c.trigger || "0") + '<br>'  // ←これ追加
       // NOTE: 効果テキスト(text)は将来実装予定のため、いったん表示しない
       // + (c.text || "") + '<br>'
       + '<small>' + (c.id || "") + '</small>'
@@ -610,7 +611,7 @@ function renderSearch(){
 
     const btnRow = document.createElement('div');
     btnRow.className = "btn-row";
-
+    
     const t = String(c.type || '').toUpperCase();
 
     // デッキに入れられるのは LEADER 以外（LEADERはリーダー選択のみ）
@@ -988,6 +989,7 @@ async function exportDeckAsImage(){
 (async function init(){
   try{
     cards = await loadCardsFromCsv();
+     console.log(cards[0]);
     // NOTE: 現在はCSVのtext（効果テキスト）を検索/表示に使わない運用。
     // 将来text検索を戻すときはこの1行を削除してください。
     // （renderSearch内の検索対象は name + text のまま残してあります）
