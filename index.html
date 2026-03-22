@@ -545,9 +545,21 @@ function renderSearch(){
     }
     // 種類フィルター
     if (selectedTypes.length > 0){
-      const t = String(c.type || '').toUpperCase();
-      if (!selectedTypes.includes(t)) return false;
-    }
+　　  const t = String(c.type || '').toUpperCase();
+　　  const triggerVal = Number(c.trigger) || 0;
+
+　　  let match = false;
+
+ 　　 selectedTypes.forEach(sel => {
+    // 通常タイプ一致
+    if (sel === t) match = true;
+
+    // 👇 TRIGGERは特別扱い
+    if (sel === "TRIGGER" && triggerVal > 0) match = true;
+　  });
+
+　  if (!match) return false;
+　　}
     return true;
   });
 
