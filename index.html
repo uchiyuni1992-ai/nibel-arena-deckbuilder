@@ -543,23 +543,26 @@ function renderSearch(){
     if (selectedSet){
       if (c.set !== selectedSet) return false;
     }
-    // 種類フィルター
-    if (selectedTypes.length > 0){
-　　  const t = String(c.type || '').toUpperCase();
-　　  const triggerVal = Number(c.trigger) || 0;
+// 種類フィルター
+// 種類フィルター
+if (selectedTypes.length > 0){
+  const t = String(c.type || '').toUpperCase();
+  const triggerVal = String(c.trigger || "").toUpperCase();
 
-　　  let match = false;
+  let match = false;
 
- 　　 selectedTypes.forEach(sel => {
-    // 通常タイプ一致
+  selectedTypes.forEach(sel => {
+    // 通常タイプ（UNIT / ITEM / SKILL / LEADER）
     if (sel === t) match = true;
 
-    // 👇 TRIGGERは特別扱い
-    if (sel === "TRIGGER" && triggerVal > 0) match = true;
-　  });
+    // TRIGGER専用判定（文字対応）
+    if (sel === "TRIGGER" && (triggerVal === "TRIGGER" || triggerVal === "1")) {
+      match = true;
+    }
+  });
 
-　  if (!match) return false;
-　　}
+  if (!match) return false;
+}
     return true;
   });
 
