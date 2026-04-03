@@ -326,7 +326,16 @@ function updateDeckViewBtn(){
   if (!toggleDeckViewBtn) return;
   toggleDeckViewBtn.textContent = '表示：' + (deckView === 'grid' ? 'グリッド' : 'リスト');
 }
-
+function getColorBg(color){
+  switch(color){
+    case "赤": return "rgba(255,0,0,0.08)";
+    case "青": return "rgba(0,0,255,0.08)";
+    case "緑": return "rgba(0,128,0,0.08)";
+    case "紫": return "rgba(128,0,128,0.08)";
+    case "黄": return "rgba(255,200,0,0.12)";
+    default: return "transparent";
+  }
+}
 
 // ====== DOM取得 ======
 const input        = document.getElementById('q');
@@ -765,53 +774,43 @@ if (deckView === 'grid'){
   const others   = sorted.filter(c => !c.trigger || c.trigger === "0");
 
   // 🔹トリガー
-  if (triggers.length > 0){
-    const label = document.createElement('div');
-    label.textContent = "トリガー";
-    label.style.gridColumn = "1 / -1";
-    label.style.fontWeight = "bold";
-    label.style.background = "#eee";
-    label.style.padding = "4px";
-    label.style.borderRadius = "4px";
-    grid.appendChild(label);
+if (triggers.length > 0){
 
-    triggers.forEach(card => {
-  const div = document.createElement('div');
-  div.style.textAlign = "center";
+  const wrap = document.createElement('div');
+  wrap.style.gridColumn = "1 / -1";
+  wrap.style.background = "rgba(200,200,200,0.25)";
+  wrap.style.backdropFilter = "blur(4px)";
+  wrap.style.borderRadius = "8px";
+  wrap.style.padding = "6px";
 
-  const img = document.createElement('img');
-  img.src = driveThumb(card.image);
-  img.style.width = "100%";
+  const label = document.createElement('div');
+  label.textContent = "トリガー";
+  label.style.fontWeight = "bold";
+  label.style.marginBottom = "4px";
 
-  const count = document.createElement('div');
-  count.textContent = "×" + card.count;
+  wrap.appendChild(label);
 
-  // 🔽 追加：操作ボタン
-  const controls = document.createElement('div');
-  controls.style.display = "flex";
-  controls.style.gap = "4px";
+  triggers.forEach(card => {
+    const div = document.createElement('div');
+    div.style.display = "inline-block";
+    div.style.width = "80px";
+    div.style.margin = "4px";
+    div.style.textAlign = "center";
 
-  const plus = document.createElement('button');
-  plus.textContent = "+";
-  plus.onclick = () => addToDeck(card.id);
+    const img = document.createElement('img');
+    img.src = driveThumb(card.image);
+    img.style.width = "100%";
 
-  const minus = document.createElement('button');
-  minus.textContent = "−";
-  minus.onclick = () => removeFromDeck(card.id);
+    const count = document.createElement('div');
+    count.textContent = "×" + card.count;
 
-  controls.appendChild(plus);
-  controls.appendChild(minus);
+    div.appendChild(img);
+    div.appendChild(count);
+    wrap.appendChild(div);
+  });
 
-  div.appendChild(img);
-  div.appendChild(count);
-  div.appendChild(controls); // ←これ追加
-  grid.appendChild(div);
-});
-    const spacer = document.createElement('div');
-spacer.style.gridColumn = "1 / -1";
-spacer.style.height = "10px";
-grid.appendChild(spacer);
-  }
+  grid.appendChild(wrap);
+}
 
   // 🔹通常カード
 others.forEach(card => {
@@ -1047,36 +1046,81 @@ async function exportDeckAsImage(){
   
     const sorted = getSortedDeckCards();
 
-   sorted.forEach(card => {
+const triggers = sorted.filter(c => c.trigger && c.trigger !== "0");
+const others   = sorted.filter(c => !c.trigger || c.trigger === "0");
 
-  const count = card.count;
+// 🔹トリガー
+if (triggers.length > 0){
+
+  const wrap = document.createElement('div');
+  wrap.style.gridColumn = '1 / -1';
+  wrap.style.background = 'rgba(200,200,200,0.25)';
+  wrap.style.borderRadius = '8px';
+  wrap.style.padding = '6px';
+
+  const label = document.createElement('div');
+  label.textContent = "トリガー";
+  label.style.fontWeight = 'bold';
+  label.style.marginBottom = '4px';
+
+  wrap.appendChild(label);
+
+  triggers.forEach(card => {
+    const cell = document.createElement('div');
+    cell.style.display = 'inline-block';
+    cell.style.width = '64px';
+    cell.style.margin = '4px';
+    cell.style.position = 'relative';
+
+    const img = document.createElement('img');
+    img.src = driveThumb(card.image);
+    img.style.width = '100%';
+    img.style.border = '1px solid #999';
+    img.style.background = '#eee';
+
+    const badge = document.createElement('div');
+    badge.textContent = card.count;
+    badge.style.position = 'absolute';
+    badge.style.top = '2px';
+    badge.style.right = '2px';
+    badge.style.background = 'rgba(0,0,0,0.75)';
+    badge.style.color = '#fff';
+    badge.style.fontSize = '11px';
+    badge.style.padding = '1px 4px';
+    badge.style.borderRadius = '999px';
+
+    cell.appendChild(img);
+    cell.appendChild(badge);
+    wrap.appendChild(cell);
+  });
+
+  grid.appendChild(wrap);
+}
+
+// 🔹通常カード
+others.forEach(card => {
 
   const cell = document.createElement('div');
   cell.style.position = 'relative';
 
-  const thumb = driveThumb(card.image);
-
   const img = document.createElement('img');
-  img.crossOrigin = "anonymous";
-  img.referrerPolicy = "no-referrer";
-  img.src = thumb;
+  img.src = driveThumb(card.image);
   img.style.width = '100%';
-  img.style.display = 'block';
   img.style.border = '1px solid #999';
   img.style.background = '#eee';
-  cell.appendChild(img);
 
   const badge = document.createElement('div');
-  badge.textContent = String(count);
+  badge.textContent = card.count;
   badge.style.position = 'absolute';
   badge.style.top = '4px';
   badge.style.right = '4px';
   badge.style.background = 'rgba(0,0,0,0.75)';
   badge.style.color = '#fff';
   badge.style.fontSize = '12px';
-  badge.style.fontWeight = 'bold';
   badge.style.padding = '2px 6px';
   badge.style.borderRadius = '999px';
+
+  cell.appendChild(img);
   cell.appendChild(badge);
 
   grid.appendChild(cell);
