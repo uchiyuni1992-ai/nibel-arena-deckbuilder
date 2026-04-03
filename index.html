@@ -355,6 +355,9 @@ clearDeckBtn.addEventListener('click', () => {
   if (!confirm('デッキとリーダーをすべてクリアしますか？')) return;
   leaderId = null;
   for (const k in deck) delete deck[k];
+
+  saveDeck(); // ←追加
+
   renderDeck();
   renderSearch();
 });
@@ -478,7 +481,23 @@ function colorSortKey(card){
 // ====== デッキ操作 ======
 function addToDeck(cardId){
   const cur = deck[cardId] || 0;
+
+  // ① 同名3枚制限
+  if (cur >= COPY_LIMIT){
+    alert("同じカードは3枚までです");
+    return;
+  }
+
+  // ② デッキ40枚制限
+  if (currentDeckCount() >= DECK_LIMIT){
+    alert("デッキは40枚までです");
+    return;
+  }
+
   deck[cardId] = cur + 1;
+
+  saveDeck(); // ←③で使う（先に入れてOK）
+
   renderDeck();
   renderSearch();
 }
@@ -486,8 +505,12 @@ function addToDeck(cardId){
 function removeFromDeck(cardId){
   const cur = deck[cardId] || 0;
   if (cur <= 0) return;
+
   if (cur === 1) delete deck[cardId];
   else deck[cardId] = cur - 1;
+
+  saveDeck(); // ←追加
+
   renderDeck();
   renderSearch();
 }
@@ -499,11 +522,20 @@ function setLeader(cardId){
     alert('このカードはリーダーにできません（type=LEADER のみ）');
     return;
   }
+
   leaderId = cardId;
+
+  saveDeck(); // ←追加
+
   renderDeck();
   renderSearch();
 }
-
+  
+function saveDeck(){
+  localStorage.setItem("deck", JSON.stringify(deck));
+  localStorage.setItem("leaderId", leaderId || "");
+}
+  
 // ====== 検索結果描画 ======
 function renderSearch(){
   const q = input.value.trim().toLowerCase();
@@ -677,7 +709,9 @@ function renderDeck(){
       leaderSlotEl.innerHTML = html;
     }
   }
-
+function isTrigger(v){
+  return String(v).trim() !== "" && String(v) !== "0";
+}
   // デッキ一覧
   deckListEl.innerHTML = "";
   const total = currentDeckCount();
@@ -686,7 +720,7 @@ function renderDeck(){
     + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
 
 　const sorted = getSortedDeckCards();
-　　if (sorted.length === 0){
+  　if (sorted.length === 0){
     const div = document.createElement('div');
     div.textContent = "デッキにカードがありません。";
     deckListEl.appendChild(div);
@@ -694,110 +728,93 @@ function renderDeck(){
   }
 
    // === 表示切替：リスト / グリッド ===
-  if (deckView === 'grid'){
-    const grid = document.createElement('div');
-    grid.className = 'deck-grid';
+if (deckView === 'grid'){
+  const grid = document.createElement('div');
+  grid.style.display = "grid";
+  grid.style.gridTemplateColumns = "repeat(auto-fill, minmax(80px, 1fr))";
+  grid.style.gap = "8px";
 
-   sorted.forEach(card => {
-　  const id = card.id;
-　  const count = card.count;
+  const triggers = sorted.filter(c => isTrigger(c.trigger));
+  const others   = sorted.filter(c => !c.trigger || c.trigger === "0");
 
-      const cell = document.createElement('div');
-      cell.className = 'deck-cell';
+  // 🔹トリガー
+  if (triggers.length > 0){
+    const label = document.createElement('div');
+    label.textContent = "トリガー";
+    label.style.gridColumn = "1 / -1";
+    label.style.fontWeight = "bold";
+    label.style.background = "#eee";
+    label.style.padding = "4px";
+    label.style.borderRadius = "4px";
+    grid.appendChild(label);
 
-      const thumb = driveThumb(card.image);
-      if (thumb){
-        const img = document.createElement('img');
-        img.src = thumb;
-        img.alt = card.name || "";
-        img.onerror = function(){ this.style.display = "none"; };
-        cell.appendChild(img);
-      } else {
-        const ph = document.createElement('div');
-        ph.style.height = '80px';
-        ph.style.border = '1px solid #999';
-        ph.style.background = '#eee';
-        cell.appendChild(ph);
-      }
+    triggers.forEach(card => {
+      const div = document.createElement('div');
+      div.style.textAlign = "center";
 
-      const badge = document.createElement('div');
-      badge.className = 'deck-badge';
-      badge.textContent = String(count);
-      cell.appendChild(badge);
+      const img = document.createElement('img');
+      img.src = driveThumb(card.image);
+      img.style.width = "100%";
 
-      const controls = document.createElement('div');
-      controls.className = 'deck-cell-controls';
+      const count = document.createElement('div');
+      count.textContent = "×" + card.count;
 
-      const minusBtn = document.createElement('button');
-      minusBtn.textContent = "−";
-      minusBtn.onclick = () => removeFromDeck(id);
-
-      const plusBtn = document.createElement('button');
-      plusBtn.textContent = "+";
-      plusBtn.onclick = () => addToDeck(id);
-
-      controls.appendChild(minusBtn);
-      controls.appendChild(plusBtn);
-
-      cell.appendChild(controls);
-      grid.appendChild(cell);
+      div.appendChild(img);
+      div.appendChild(count);
+      grid.appendChild(div);
     });
-
-    deckListEl.appendChild(grid);
-    return;
+    const spacer = document.createElement('div');
+spacer.style.gridColumn = "1 / -1";
+spacer.style.height = "10px";
+grid.appendChild(spacer);
   }
 
-  // === リスト表示（従来） ===
-　  sorted.forEach(card => {
-　　  const id = card.id;
-　　  const count = card.count;
-    
-    const row  = document.createElement('div');
-    row.className = "deck-card-row";
+  // 🔹通常カード
+  others.forEach(card => {
+    const div = document.createElement('div');
+    div.style.textAlign = "center";
 
-    const left = document.createElement('div');
-    left.className = "deck-card-left";
+    const img = document.createElement('img');
+    img.src = driveThumb(card.image);
+    img.style.width = "100%";
 
-    const thumb = driveThumb(card.image);
-    if (thumb){
-      const img = document.createElement('img');
-      img.className = "deck-card-thumb";
-      img.src = thumb;
-      img.alt = card.name || "";
-      img.onerror = function(){ this.style.display = "none"; };
-      left.appendChild(img);
-    }
+    const count = document.createElement('div');
+    count.textContent = "×" + card.count;
 
-    const nameSpan = document.createElement('span');
-    nameSpan.className = "deck-card-name";
-    nameSpan.textContent = (card.name || "(名称なし)") + " (" + card.id + ")";
-    left.appendChild(nameSpan);
-
-    const overCopy = count > COPY_LIMIT;
-    const countSpan = document.createElement('span');
-    countSpan.className = "deck-card-count";
-    countSpan.innerHTML =
-      count + '枚' + (overCopy ? ' <span class="badge-over">3枚超</span>' : '');
-
-    const btns = document.createElement('span');
-    const minusBtn = document.createElement('button');
-    minusBtn.textContent = "−";
-    minusBtn.style.fontSize = "11px";
-    minusBtn.onclick = () => removeFromDeck(id);
-    const plusBtn = document.createElement('button');
-    plusBtn.textContent = "+";
-    plusBtn.style.fontSize = "11px";
-    plusBtn.onclick = () => addToDeck(id);
-    btns.appendChild(minusBtn);
-    btns.appendChild(plusBtn);
-
-    row.appendChild(left);
-    row.appendChild(countSpan);
-    row.appendChild(btns);
-
-    deckListEl.appendChild(row);
+    div.appendChild(img);
+    div.appendChild(count);
+    grid.appendChild(div);
   });
 
+  deckListEl.appendChild(grid);
+  return;
+}
+  
+  // === リスト表示（従来） ===
+const triggers = sorted.filter(c => c.trigger && c.trigger !== "0");
+const others   = sorted.filter(c => !c.trigger || c.trigger === "0");
+
+// 🔹トリガー
+if (triggers.length > 0){
+  const label = document.createElement('div');
+  label.textContent = "トリガー";
+  label.style.fontWeight = "bold";
+  label.style.marginTop = "8px";
+  deckListEl.appendChild(label);
+
+  triggers.forEach(card => {
+    const div = document.createElement('div');
+    div.textContent = `${card.id} ${card.name} ×${card.count}`;
+    deckListEl.appendChild(div);
+  });
+}
+
+// 🔹通常カード
+others.forEach(card => {
+  const div = document.createElement('div');
+  div.textContent = `${card.id} ${card.name} ×${card.count}`;
+  deckListEl.appendChild(div);
+});
 }
 
 function getSortedDeckCards(){
@@ -969,40 +986,40 @@ async function exportDeckAsImage(){
   
     const sorted = getSortedDeckCards();
 
-      sorted.forEach(card => {
+   sorted.forEach(card => {
 
-  
-      const count = deck[id] || 0;
-  
-      const cell = document.createElement('div');
-      cell.style.position = 'relative';
-  
-      const thumb = driveThumb(card.image);
-      const img = document.createElement('img');
-      img.crossOrigin = "anonymous";
-      img.referrerPolicy = "no-referrer";
-      img.src = thumb;
-      img.style.width = '100%';
-      img.style.display = 'block';
-      img.style.border = '1px solid #999';
-      img.style.background = '#eee';
-      cell.appendChild(img);
-  
-      const badge = document.createElement('div');
-      badge.textContent = String(count);
-      badge.style.position = 'absolute';
-      badge.style.top = '4px';
-      badge.style.right = '4px';
-      badge.style.background = 'rgba(0,0,0,0.75)';
-      badge.style.color = '#fff';
-      badge.style.fontSize = '12px';
-      badge.style.fontWeight = 'bold';
-      badge.style.padding = '2px 6px';
-      badge.style.borderRadius = '999px';
-      cell.appendChild(badge);
-  
-      grid.appendChild(cell);
-    });
+  const count = card.count;
+
+  const cell = document.createElement('div');
+  cell.style.position = 'relative';
+
+  const thumb = driveThumb(card.image);
+
+  const img = document.createElement('img');
+  img.crossOrigin = "anonymous";
+  img.referrerPolicy = "no-referrer";
+  img.src = thumb;
+  img.style.width = '100%';
+  img.style.display = 'block';
+  img.style.border = '1px solid #999';
+  img.style.background = '#eee';
+  cell.appendChild(img);
+
+  const badge = document.createElement('div');
+  badge.textContent = String(count);
+  badge.style.position = 'absolute';
+  badge.style.top = '4px';
+  badge.style.right = '4px';
+  badge.style.background = 'rgba(0,0,0,0.75)';
+  badge.style.color = '#fff';
+  badge.style.fontSize = '12px';
+  badge.style.fontWeight = 'bold';
+  badge.style.padding = '2px 6px';
+  badge.style.borderRadius = '999px';
+  cell.appendChild(badge);
+
+  grid.appendChild(cell);
+});
   
     wrap.appendChild(grid);
     // 画面外に配置してキャプチャ
@@ -1051,6 +1068,16 @@ async function exportDeckAsImage(){
     // 将来text検索を戻すときはこの1行を削除してください。
     // （renderSearch内の検索対象は name + text のまま残してあります）
     cards = cards.map(c => ({ ...c, text: "" }));
+    // 保存データ読み込み
+const savedDeck = localStorage.getItem("deck");
+if (savedDeck){
+  Object.assign(deck, JSON.parse(savedDeck));
+}
+
+const savedLeader = localStorage.getItem("leaderId");
+if (savedLeader){
+  leaderId = savedLeader;
+}
     updateDeckViewBtn();
     renderSearch();
     renderDeck();
