@@ -685,24 +685,22 @@ function renderDeck(){
   deckCountEl.innerHTML = "デッキ枚数: " + total + " / " + DECK_LIMIT
     + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
 
-　const ids = sortDeckIds(Object.keys(deck));
-  if (ids.length === 0){
+　const sorted = getSortedDeckCards();
+　　if (sorted.length === 0){
     const div = document.createElement('div');
     div.textContent = "デッキにカードがありません。";
     deckListEl.appendChild(div);
     return;
   }
 
-  ids.sort();
-
-  // === 表示切替：リスト / グリッド ===
+   // === 表示切替：リスト / グリッド ===
   if (deckView === 'grid'){
     const grid = document.createElement('div');
     grid.className = 'deck-grid';
 
-    ids.forEach(id => {
-      const count = deck[id];
-      const card = cards.find(c => c.id === id) || {id, name:""};
+   sorted.forEach(card => {
+　  const id = card.id;
+　  const count = card.count;
 
       const cell = document.createElement('div');
       cell.className = 'deck-cell';
@@ -750,10 +748,10 @@ function renderDeck(){
   }
 
   // === リスト表示（従来） ===
-  ids.forEach(id => {
-    const count = deck[id];
-    const card = cards.find(c => c.id === id) || {id, name:""};
-
+　  sorted.forEach(card => {
+　　  const id = card.id;
+　　  const count = card.count;
+    
     const row  = document.createElement('div');
     row.className = "deck-card-row";
 
@@ -802,58 +800,47 @@ function renderDeck(){
 
 }
 
-  function sortDeckIds(ids){
-  return ids.sort((a, b) => {
-    const cardA = cards.find(c => c.id === a) || {};
-    const cardB = cards.find(c => c.id === b) || {};
+function getSortedDeckCards(){
+  return Object.keys(deck).map(id => {
+    const card = cards.find(c => c.id === id) || {};
+    return {
+      id,
+      count: deck[id],
+      ...card
+    };
+  }).sort((a, b) => {
 
-    // ① トリガー（あり優先）
-    const triggerA = (cardA.trigger && cardA.trigger !== "0") ? 1 : 0;
-    const triggerB = (cardB.trigger && cardB.trigger !== "0") ? 1 : 0;
+    // ① トリガー
+    const triggerA = (a.trigger && a.trigger !== "0") ? 1 : 0;
+    const triggerB = (b.trigger && b.trigger !== "0") ? 1 : 0;
     if (triggerA !== triggerB) return triggerB - triggerA;
 
-    // ② カード種類
+    // ② 種類
     const typeOrder = {
       "UNIT": 0,
       "ITEM": 1,
       "SKILL": 2
     };
-    const typeA = typeOrder[String(cardA.type || "").toUpperCase()] ?? 99;
-    const typeB = typeOrder[String(cardB.type || "").toUpperCase()] ?? 99;
+    const typeA = typeOrder[String(a.type || "").toUpperCase()] ?? 99;
+    const typeB = typeOrder[String(b.type || "").toUpperCase()] ?? 99;
     if (typeA !== typeB) return typeA - typeB;
 
-    // ③ コスト（未実装なのでスキップ or 仮）
-    // const costA = Number(cardA.cost) || 999;
-    // const costB = Number(cardB.cost) || 999;
-    // if (costA !== costB) return costA - costB;
-
-    // ④ 収録弾
+    // ③ 弾
     const getSetOrder = (set) => {
       if (!set) return 999;
+      const m = set.match(/([A-Z]+)(\d+)/);
+      if (!m) return 999;
 
-      const match = set.match(/([A-Z]+)(\d+)/);
-      if (!match) return 999;
-
-      const prefix = match[1];
-      const num = parseInt(match[2]);
-
-      const prefixOrder = {
-        "BT": 0,
-        "ST": 1
-      };
-
-      return (prefixOrder[prefix] ?? 99) * 100 + num;
+      const prefixOrder = { BT:0, ST:1 };
+      return (prefixOrder[m[1]] ?? 99) * 100 + Number(m[2]);
     };
 
-    const setA = getSetOrder(cardA.set);
-    const setB = getSetOrder(cardB.set);
+    const setA = getSetOrder(a.set);
+    const setB = getSetOrder(b.set);
     if (setA !== setB) return setA - setB;
 
-    // ⑤ カード番号
-    const numA = Number(cardA.number) || 0;
-    const numB = Number(cardB.number) || 0;
-
-    return numA - numB;
+    // ④ 番号
+    return (Number(a.number)||0) - (Number(b.number)||0);
   });
 }
   
@@ -980,8 +967,9 @@ async function exportDeckAsImage(){
     grid.style.gap = '6px';
     grid.style.marginTop = '8px';
   
-    const ids = sortDeckIds(Object.keys(deck));
-    ids.forEach(id => {
+    const sorted = getSortedDeckCards();
+
+      sorted.forEach(card => {
       const card = cards.find(c => c.id === id);
       if (!card) return;
   
