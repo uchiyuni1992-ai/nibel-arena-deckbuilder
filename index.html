@@ -481,7 +481,23 @@ function colorSortKey(card){
 // ====== デッキ操作 ======
 function addToDeck(cardId){
   const cur = deck[cardId] || 0;
+const card = cards.find(c => c.id === cardId);
+const isTrigger = String(card?.trigger).trim() !== "" && String(card?.trigger) !== "0";
 
+// 現在のトリガー枚数
+  const TRIGGER_LIMIT = 8;
+const triggerCount = Object.keys(deck).reduce((sum, id) => {
+  const c = cards.find(x => x.id === id);
+  if (!c) return sum;
+  const t = String(c.trigger).trim() !== "" && String(c.trigger) !== "0";
+  return t ? sum + deck[id] : sum;
+}, 0);
+
+// トリガー制限
+if (isTrigger && triggerCount >= 8){
+  alert("トリガーは8枚までです");
+  return;
+}
   // ① 同名3枚制限
   if (cur >= COPY_LIMIT){
     alert("同じカードは3枚までです");
@@ -715,10 +731,21 @@ function isTrigger(v){
   // デッキ一覧
   deckListEl.innerHTML = "";
   const total = currentDeckCount();
-  const overDeck = total > DECK_LIMIT;
-  deckCountEl.innerHTML = "デッキ枚数: " + total + " / " + DECK_LIMIT
-    + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
+  const triggerCount = Object.keys(deck).reduce((sum, id) => {
+  const card = cards.find(c => c.id === id);
+  if (!card) return sum;
 
+  const isTrigger = String(card.trigger).trim() !== "" && String(card.trigger) !== "0";
+  return isTrigger ? sum + deck[id] : sum;
+}, 0);
+  
+  const overDeck = total > DECK_LIMIT;
+ deckCountEl.innerHTML =
+  "デッキ枚数: " + total + " / " + DECK_LIMIT +
+  "　|　トリガー: " + triggerCount + " / 8" +
+  (total > DECK_LIMIT ? ' <span class="badge-over">40枚超過</span>' : '') +
+  (triggerCount > 8 ? ' <span class="badge-over">トリガー超過</span>' : '');
+  
 　const sorted = getSortedDeckCards();
   　if (sorted.length === 0){
     const div = document.createElement('div');
@@ -749,20 +776,37 @@ if (deckView === 'grid'){
     grid.appendChild(label);
 
     triggers.forEach(card => {
-      const div = document.createElement('div');
-      div.style.textAlign = "center";
+  const div = document.createElement('div');
+  div.style.textAlign = "center";
 
-      const img = document.createElement('img');
-      img.src = driveThumb(card.image);
-      img.style.width = "100%";
+  const img = document.createElement('img');
+  img.src = driveThumb(card.image);
+  img.style.width = "100%";
 
-      const count = document.createElement('div');
-      count.textContent = "×" + card.count;
+  const count = document.createElement('div');
+  count.textContent = "×" + card.count;
 
-      div.appendChild(img);
-      div.appendChild(count);
-      grid.appendChild(div);
-    });
+  // 🔽 追加：操作ボタン
+  const controls = document.createElement('div');
+  controls.style.display = "flex";
+  controls.style.gap = "4px";
+
+  const plus = document.createElement('button');
+  plus.textContent = "+";
+  plus.onclick = () => addToDeck(card.id);
+
+  const minus = document.createElement('button');
+  minus.textContent = "−";
+  minus.onclick = () => removeFromDeck(card.id);
+
+  controls.appendChild(plus);
+  controls.appendChild(minus);
+
+  div.appendChild(img);
+  div.appendChild(count);
+  div.appendChild(controls); // ←これ追加
+  grid.appendChild(div);
+});
     const spacer = document.createElement('div');
 spacer.style.gridColumn = "1 / -1";
 spacer.style.height = "10px";
@@ -770,21 +814,38 @@ grid.appendChild(spacer);
   }
 
   // 🔹通常カード
-  others.forEach(card => {
-    const div = document.createElement('div');
-    div.style.textAlign = "center";
+others.forEach(card => {
+  const div = document.createElement('div');
+  div.style.textAlign = "center";
 
-    const img = document.createElement('img');
-    img.src = driveThumb(card.image);
-    img.style.width = "100%";
+  const img = document.createElement('img');
+  img.src = driveThumb(card.image);
+  img.style.width = "100%";
 
-    const count = document.createElement('div');
-    count.textContent = "×" + card.count;
+  const count = document.createElement('div');
+  count.textContent = "×" + card.count;
 
-    div.appendChild(img);
-    div.appendChild(count);
-    grid.appendChild(div);
-  });
+  // 🔽 追加：操作ボタン
+  const controls = document.createElement('div');
+  controls.style.display = "flex";
+  controls.style.gap = "4px";
+
+  const plus = document.createElement('button');
+  plus.textContent = "+";
+  plus.onclick = () => addToDeck(card.id);
+
+  const minus = document.createElement('button');
+  minus.textContent = "−";
+  minus.onclick = () => removeFromDeck(card.id);
+
+  controls.appendChild(plus);
+  controls.appendChild(minus);
+
+  div.appendChild(img);
+  div.appendChild(count);
+  div.appendChild(controls); // ←これ追加
+  grid.appendChild(div);
+});
 
   deckListEl.appendChild(grid);
   return;
