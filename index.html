@@ -357,13 +357,22 @@ function buildColorFilter() {
 }
 
 function buildTypeFilter() {
-  const types = [...new Set(cards.map(c => c.type))]
+
+  const types = [
+    ...new Set(cards.map(c => c.type))
+  ]
     .filter(Boolean)
     .sort();
+
+  // TRIGGERを追加
+  if (!types.includes("TRIGGER")) {
+    types.push("TRIGGER");
+  }
 
   typeFilterEl.innerHTML = '';
 
   types.forEach(type => {
+
     const label = document.createElement('label');
 
     label.innerHTML =
@@ -372,7 +381,9 @@ function buildTypeFilter() {
     label.style.marginRight = '8px';
 
     typeFilterEl.appendChild(label);
+
   });
+
 }
 
 // ====== イベント ======
