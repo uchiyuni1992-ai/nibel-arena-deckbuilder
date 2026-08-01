@@ -488,13 +488,26 @@ function normalizeImageUrl(u){
 }
 // GoogleドライブのサムネURL
 function driveThumb(url) {
+
   const u = normalizeImageUrl(url);
+
   if (!u) return "";
-  // Google Drive のときだけ thumbnail に変換
-  const m = u.match(/id=([^&]+)/);
-  if (!m) return u;
-  const id = m[1];
-  return "https://drive.google.com/thumbnail?id=" + id + "&sz=w400";
+
+  // lh3.googleusercontent.com/d/FILEID 対応
+  let m = u.match(/googleusercontent\.com\/d\/([^/?]+)/);
+
+  if (m) {
+    return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w400";
+  }
+
+  // 従来の ?id=FILEID 対応
+  m = u.match(/id=([^&]+)/);
+
+  if (m) {
+    return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w400";
+  }
+
+  return u;
 }
 
 function currentDeckCount() {
