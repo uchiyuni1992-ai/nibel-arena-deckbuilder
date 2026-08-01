@@ -330,7 +330,7 @@ BT04-81,ユーべリウスの牙,,https://lh3.googleusercontent.com/d/1fHuMUR4Xk
 BT04-82,デモンズドライブ,,https://lh3.googleusercontent.com/d/1ytuagbmoioKRrmhA8Qf3gFAFSpd9YI26,BT04,82,紫,SKILL,TRIGGER
 BT04-83,深淵龍の首飾り,,https://lh3.googleusercontent.com/d/17mvVUP6aCwwgqApm7akSE9PAjOXxvsPZ,BT04,83,紫,ITEM,
 BT04-84,覚醒龍の宝玉,,https://lh3.googleusercontent.com/d/16cFnTA21Wb3fiSRp_xUBZ1vqzLGHvceg,BT04,84,紫,ITEM,
-PR01-01,養護教諭ユルハ,,https://lh3.googleusercontent.com/d/1KG3MRAwcGgFj-6b0TVh0InAAtXRkRZv7,BT04,1,赤,UNIT,TRIGGER
+PR01-01,養護教諭ユルハ,,https://lh3.googleusercontent.com/d/1KG3MRAwcGgFj-6b0TVh0InAAtXRkRZv7,PR01,1,赤,UNIT,TRIGGER
 PR01-02,夏休みのシャルロッテ,,https://lh3.googleusercontent.com/d/1L2wnkK9i-hPrDcfu7CMZRreSCUolH4pR,PR01,2,赤,UNIT,
 PR01-03,快速の旗手セクレット,,https://lh3.googleusercontent.com/d/1CrQRw1hr0Om7vM7YaTeZPACGUTNK-KWv,PR01,3,赤,UNIT,
 PR01-04,海辺のヴェローナ,,https://lh3.googleusercontent.com/d/1KPOMAEMpdTsnWfhps2WT6mkB1sfEN5-U,PR01,4,赤,UNIT,
@@ -342,7 +342,7 @@ PR01-09,悲嘆のロゼ,,https://lh3.googleusercontent.com/d/1E4rzyDb9FlnfDbru3D
 PR01-10,ヘカテ,,https://lh3.googleusercontent.com/d/1vnRvYAsnk1GlYlcjD9ozUu10JnuTMyIv,PR01,10,紫,UNIT,
 PR01-11,生命のゆりかご,,https://lh3.googleusercontent.com/d/1YboRR8qo493NpD_fRZ1K3kX_7csPt3cC,PR01,11,紫,UNIT,TRIGGER
 PR01-12,アラバストロン,,https://lh3.googleusercontent.com/d/1CEvRwlHxHpzAOuljgl4duzCh2R45Ri4L,PR01,12,紫,UNIT,
-ST01-001,ラピ,,https://lh3.googleusercontent.com/d/109OK-vHzrqr3FGg9MNPMNWzCPbVcY-fw,PR01,1,赤,LEADER,
+ST01-001,ラピ,,https://lh3.googleusercontent.com/d/109OK-vHzrqr3FGg9MNPMNWzCPbVcY-fw,ST01,1,赤,LEADER,
 ST01-002,ネオン,,https://lh3.googleusercontent.com/d/19ldSB0spAtxlYNuwnXxyD3u0jvrGHebs,ST01,2,赤,UNIT,
 ST01-003,ベスティ,,https://lh3.googleusercontent.com/d/1uPMSkyymSo6SfjQTJZ5A10D3h0whanUh,ST01,3,赤,UNIT,
 ST01-004,ウンファ,,https://lh3.googleusercontent.com/d/1QPuoShaCChkA7N3zvCGj5TI65g2LMNKp,ST01,4,赤,UNIT,
@@ -359,7 +359,7 @@ ST01-014,火力が全て！,,https://lh3.googleusercontent.com/d/1PlvOvwCdeAlTae
 ST01-015,ミサイル,,https://lh3.googleusercontent.com/d/16S-kz60ucHVNUVahdqGB_BXfFJazOjWt,ST01,15,赤,SKILL,TRIGGER
 ST01-016,レアメタルブーツ,,https://lh3.googleusercontent.com/d/1rAX74kZ9snm4jPDd-bdlmzZ5pA6kZzyh,ST01,16,赤,ITEM,
 ST01-017,ケブラーグローブ,,https://lh3.googleusercontent.com/d/15Aq_XJBa2GHNlr3oCxgptyZZIv-JWBdL,ST01,17,赤,ITEM,
-ST02-001,ギルティ,,https://lh3.googleusercontent.com/d/1-SemPN56_vsxHkmGMyllaNP8xONRGTzO,ST01,1,緑,LEADER,
+ST02-001,ギルティ,,https://lh3.googleusercontent.com/d/1-SemPN56_vsxHkmGMyllaNP8xONRGTzO,ST02,1,緑,LEADER,
 ST02-002,N102,,https://lh3.googleusercontent.com/d/1Wh0WDt__FMd_eU6KOD8gDk4e82rVYdTC,ST02,2,緑,UNIT,
 ST02-003,ミカ,,https://lh3.googleusercontent.com/d/1pmWQzxKCzWrwElOHOL8XCE-Ca3P2x055,ST02,3,緑,UNIT,
 ST02-004,ジュリア,,https://lh3.googleusercontent.com/d/1QZFHQhT_LErInuwWOA29cQ3m8XxPUroC,ST02,4,緑,UNIT,
@@ -376,7 +376,7 @@ ST02-014,プライズ,,https://lh3.googleusercontent.com/d/1oEdkqIkNTmcU16Eb-Y6v
 ST02-015,アクセラレーション,,https://lh3.googleusercontent.com/d/10lp57akusOHwlyxhr_jK7wdnSUTIH0yK,ST02,15,緑,SKILL,TRIGGER
 ST02-016,ケブラーグローブプロテクター,,https://lh3.googleusercontent.com/d/1zEA6ophWb8fhrH7RkEHTAMVCYkFGV4b5,ST02,16,緑,ITEM,
 ST02-017,レアメタルヘルメット,,https://lh3.googleusercontent.com/d/1jTpswzu9lP9rZNsQPBjGgesLVRCeMigY,ST02,17,緑,ITEM,
-ST03-001,モダニア,,https://lh3.googleusercontent.com/d/1BAFNgExZcST6tr_DlqsUbFQfFJs8yIFn,ST02,1,紫,LEADER,
+ST03-001,モダニア,,https://lh3.googleusercontent.com/d/1BAFNgExZcST6tr_DlqsUbFQfFJs8yIFn,ST03,1,紫,LEADER,
 ST03-002,デルタ,,https://lh3.googleusercontent.com/d/16-FOJxvIJKJ4VbH7AVPEwtk0jo6XTuHb,ST03,2,紫,UNIT,
 ST03-003,プリバティ,,https://lh3.googleusercontent.com/d/1iV2Iz7-3NGWGyCajtIeOddfhemjVHtH8,ST03,3,紫,UNIT,TRIGGER
 ST03-004,ユニ,,https://lh3.googleusercontent.com/d/1OL_DY9iMmdV4D9IOtHtbBVdGr3BPsxCJ,ST03,4,紫,UNIT,
@@ -393,7 +393,7 @@ ST03-014,センスシェアリング,,https://lh3.googleusercontent.com/d/1WqcHa
 ST03-015,かかって来い！,,https://lh3.googleusercontent.com/d/1PnYCvrIoEMWEhJ8YlPEQGFRojerQb-2b,ST03,15,紫,SKILL,TRIGGER
 ST03-016,ケブラーベスト,,https://lh3.googleusercontent.com/d/1UY80od0v0YKvCThh3T05fN3_wdhSdmo9,ST03,16,紫,ITEM,
 ST03-017,レアメタルアームガード,,https://lh3.googleusercontent.com/d/1c4pDG6dU7AdL5PubPERdYxUagcjtbgwT,ST03,17,紫,ITEM,
-ST04-001,ドロシー,,https://lh3.googleusercontent.com/d/1tUcj9o-PwfPjdtZTn0MFMq-hCEUN8q03,ST03,1,青,LEADER,
+ST04-001,ドロシー,,https://lh3.googleusercontent.com/d/1tUcj9o-PwfPjdtZTn0MFMq-hCEUN8q03,ST04,1,青,LEADER,
 ST04-002,I-DOLL・フラワー,,https://lh3.googleusercontent.com/d/16Hg_knq4dLzc_LrMxmhE_DIgGda8t4s_,ST04,2,青,UNIT,
 ST04-003,マリアン,,https://lh3.googleusercontent.com/d/1VSYx7ahKI-Ap0P-dmqR0m8gO9opDHefT,ST04,3,青,UNIT,
 ST04-004,ライ,,https://lh3.googleusercontent.com/d/106TaCwgpUsSSyqiBTxsdIO8J-rQkWt2V,ST04,4,青,UNIT,
@@ -410,7 +410,7 @@ ST04-014,ナーシング,,https://lh3.googleusercontent.com/d/1DN3TPMUnjgyOa_RE6
 ST04-015,失楽園,,https://lh3.googleusercontent.com/d/10iizeD877fYuRvIIjBi8jkSLJxKX6yYV,ST04,15,青,SKILL,TRIGGER
 ST04-016,ケブラージャケット,,https://lh3.googleusercontent.com/d/1ac35XFp3cFrd2swnSMw1oa29vf5N4m9Y,ST04,16,青,ITEM,
 ST04-017,レアメタルグローブ,,https://lh3.googleusercontent.com/d/1cr0Nf_8tZw-fA4RxJg-g2B_CmBqdVKWk,ST04,17,青,ITEM,TRIGGER
-ST05-001,プリバティ,,https://lh3.googleusercontent.com/d/1Ba3XWqYIQvEaXnUhQoObhUQBUOmEql2M,ST04,1,黄,LEADER,
+ST05-001,プリバティ,,https://lh3.googleusercontent.com/d/1Ba3XWqYIQvEaXnUhQoObhUQBUOmEql2M,ST05,1,黄,LEADER,
 ST05-002,プロダクト08,,https://lh3.googleusercontent.com/d/1ZVpRbsFvscB2AhPo_1I_oNpzij8B_wQm,ST05,2,黄,UNIT,
 ST05-003,シュガー,,https://lh3.googleusercontent.com/d/17guFoZ-C6v6dYq7rHb-Yk1Ca3gsVnj_n,ST05,3,黄,UNIT,
 ST05-004,プリム,,https://lh3.googleusercontent.com/d/11sqHhKzR9x4n1vz38wz_Jd5y58BM5fOJ,ST05,4,黄,UNIT,
@@ -427,7 +427,7 @@ ST05-014,ワンフォーオール,,https://lh3.googleusercontent.com/d/1fqvTneMT
 ST05-015,ケプラーゲイター,,https://lh3.googleusercontent.com/d/1fgAB93uguA0twIf7vOx_onOGIZhorbI4,ST05,15,黄,ITEM,
 ST05-016,レアメタルガントレット,,https://lh3.googleusercontent.com/d/1NaFapnj97_VGYpu0tH9gZE4tL9hrAiV4,ST05,16,黄,ITEM,
 ST05-017,レアメタルゲイター,,https://lh3.googleusercontent.com/d/1Fb1TC5MyqXIEfjBCgQfsYKwi3uevD2Da,ST05,17,黄,ITEM,
-ST06-01,リナーク,,https://lh3.googleusercontent.com/d/17PXQVs37F2SSLfcLvi4l5IWO7dr4oDIa,ST05,1,赤,LEADER,
+ST06-01,リナーク,,https://lh3.googleusercontent.com/d/17PXQVs37F2SSLfcLvi4l5IWO7dr4oDIa,ST06,1,赤,LEADER,
 ST06-02,小悪魔ルナ,,https://lh3.googleusercontent.com/d/1ag7B7BhPGknRstcDz0O7O3XlaNqJhUv5,ST06,2,赤,UNIT,
 ST06-03,シルク,,https://lh3.googleusercontent.com/d/1IUKP2PlVeC-wJmRQWwblX4XWfZAAIQGz,ST06,3,赤,UNIT,
 ST06-04,ユナ,,https://lh3.googleusercontent.com/d/1e1hqum1ZtCbC-4ZX7tt2RXLUkpMMJB82,ST06,4,赤,UNIT,
@@ -444,7 +444,7 @@ ST06-14,燦爛たる永遠,,https://lh3.googleusercontent.com/d/1a1Mm05tjJE3B7aX
 ST06-15,密やかな手つき,,https://lh3.googleusercontent.com/d/1JYXm71PUB9wSwQ0LXwiJgGgdKfeEyN2J,ST06,15,赤,SKILL,
 ST06-16,愛おしい記憶は永遠に,,https://lh3.googleusercontent.com/d/13jKestYPWOwI0jW_qG0sZ7LW-RQ_DmYS,ST06,16,赤,SKILL,
 ST06-17,黒曜石の指輪,,https://lh3.googleusercontent.com/d/13IdUB6hu_yMdlSoa4N_3A0V4No_juHgZ,ST06,17,赤,ITEM,
-ST07-01,フェネ,,https://lh3.googleusercontent.com/d/1WhOzRfAbMzadlODoekZDVlyLq76HDdxX,ST06,1,紫,LEADER,
+ST07-01,フェネ,,https://lh3.googleusercontent.com/d/1WhOzRfAbMzadlODoekZDVlyLq76HDdxX,ST07,1,紫,LEADER,
 ST07-02,歪みし亡霊 カイロン,,https://lh3.googleusercontent.com/d/1upNYPtw5tsUycT5o1w1JWf9_iO3_-1Si,ST07,2,紫,UNIT,
 ST07-03,ピィリス,,https://lh3.googleusercontent.com/d/1q6CFuWkLA_lKd6d4AL7Gkq-4yRMHFfv9,ST07,3,紫,UNIT,
 ST07-04,セクレット,,https://lh3.googleusercontent.com/d/1hrfJNcp_3OAvgmN071_g6voeN34du9zx,ST07,4,紫,UNIT,
