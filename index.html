@@ -499,7 +499,6 @@ function normalizeImageUrl(u){
 }
 // GoogleドライブのサムネURL
 function driveThumb(url) {
-
   const u = normalizeImageUrl(url);
 
   if (!u) return "";
@@ -508,14 +507,14 @@ function driveThumb(url) {
   let m = u.match(/googleusercontent\.com\/d\/([^/?]+)/);
 
   if (m) {
-    return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w400";
+    return "https://lh3.googleusercontent.com/d/" + m[1] + "=w400";
   }
 
   // 従来の ?id=FILEID 対応
   m = u.match(/id=([^&]+)/);
 
   if (m) {
-    return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w400";
+    return "https://lh3.googleusercontent.com/d/" + m[1] + "=w400";
   }
 
   return u;
@@ -528,6 +527,39 @@ function currentDeckCount() {
 function colorSortKey(card){
   const idx = COLOR_ORDER.indexOf(card.color);
   return idx === -1 ? 999 : idx;
+}
+
+function sortDeckIds(ids){
+
+  return ids.sort((a, b) => {
+
+    const cardA = cards.find(c => c.id === a);
+    const cardB = cards.find(c => c.id === b);
+
+    const triggerA =
+      String(cardA?.trigger || "").toUpperCase() === "TRIGGER";
+
+    const triggerB =
+      String(cardB?.trigger || "").toUpperCase() === "TRIGGER";
+
+    // トリガーを先頭へ
+    if (triggerA !== triggerB) {
+      return triggerA ? -1 : 1;
+    }
+
+    // コスト順
+    const costA = Number(cardA?.cost || 999);
+    const costB = Number(cardB?.cost || 999);
+
+    if (costA !== costB) {
+      return costA - costB;
+    }
+
+    // 同コストならカード番号順
+    return a.localeCompare(b);
+
+  });
+
 }
 
 // ====== デッキ操作 ======
@@ -740,15 +772,13 @@ function renderDeck(){
   deckCountEl.innerHTML = "デッキ枚数: " + total + " / " + DECK_LIMIT
     + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '');
 
-  const ids = Object.keys(deck);
+  const ids = sortDeckIds(Object.keys(deck));
   if (ids.length === 0){
     const div = document.createElement('div');
     div.textContent = "デッキにカードがありません。";
     deckListEl.appendChild(div);
     return;
   }
-
-  ids.sort();
 
   // === 表示切替：リスト / グリッド ===
   if (deckView === 'grid'){
@@ -798,6 +828,10 @@ function renderDeck(){
 
       cell.appendChild(controls);
       grid.appendChild(cell);
+      console.log(card.name);
+      console.log(card.image);
+      console.log(thumb);
+      ``
     });
 
     deckListEl.appendChild(grid);
@@ -898,10 +932,34 @@ async function exportDeckAsImage(){
   try {
 
     if (!exportDeckImgBtn) return;
-  
+   let deckBgColor = "#ffffff";
+
+if (leaderId) {
+  const leader = cards.find(c => c.id === leaderId);
+
+  if (leader) {
+    switch ((leader.color || "").trim()) {
+      case "赤":
+        deckBgColor = "#ffe0e0";
+        break;
+      case "青":
+        deckBgColor = "#e0ecff";
+        break;
+      case "黄":
+        deckBgColor = "#fff8d9";
+        break;
+      case "緑":
+        deckBgColor = "#e3f7e3";
+        break;
+      case "紫":
+        deckBgColor = "#f1e0ff";
+        break;
+    }
+  }
+}
     // 保存専用DOMを生成（スクロール無しで全カードを1枚に）
     const wrap = document.createElement('div');
-    wrap.style.background = '#fff';
+    wrap.style.background = deckBgColor;
     wrap.style.color = '#000';
     wrap.style.padding = '16px';
     wrap.style.width = '360px';
@@ -980,7 +1038,7 @@ async function exportDeckAsImage(){
     grid.style.gap = '6px';
     grid.style.marginTop = '8px';
   
-    const ids = Object.keys(deck).sort();
+    const ids = sortDeckIds(Object.keys(deck));
     ids.forEach(id => {
       const card = cards.find(c => c.id === id);
       if (!card) return;
@@ -1027,7 +1085,7 @@ async function exportDeckAsImage(){
     try{
       await waitImagesLoaded(wrap, 8000);
       const canvas = await html2canvas(wrap, {
-        backgroundColor: '#ffffff',
+        backgroundColor: deckBgColor,
         scale: 2,
         useCORS: true
       });
