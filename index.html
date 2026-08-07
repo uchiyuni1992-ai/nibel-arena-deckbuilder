@@ -641,19 +641,28 @@ if (selectedTypes.length > 0){
   const t = String(c.type || '').toUpperCase();
   const triggerVal = String(c.trigger || "").toUpperCase();
 
-  let match = false;
+  let match = true;
 
-  selectedTypes.forEach(sel => {
-    // 通常タイプ（UNIT / ITEM / SKILL / LEADER）
-    if (sel === t) match = true;
+selectedTypes.forEach(sel => {
 
-    // TRIGGER専用判定（文字対応）
-    if (sel === "TRIGGER" && (triggerVal === "TRIGGER" || triggerVal === "1")) {
-      match = true;
+  if (sel === "TRIGGER") {
+    const isTrigger =
+      triggerVal === "TRIGGER" ||
+      triggerVal === "1";
+
+    if (!isTrigger) match = false;
+
+  } else {
+
+    if (sel !== t) {
+      match = false;
     }
-  });
 
-  if (!match) return false;
+  }
+});
+
+if (!match) return false;
+
 }
     return true;
   });
@@ -773,6 +782,31 @@ function renderDeck(){
   // デッキ一覧
   deckListEl.innerHTML = "";
   const total = currentDeckCount();
+  let unitCount = 0;
+  let skillCount = 0;
+  let itemCount = 0;
+
+  Object.keys(deck).forEach(id => {
+    const card = cards.find(c => c.id === id);
+    if (!card) return;
+
+    const count = deck[id] || 0;
+
+    switch ((card.type || "").toUpperCase()) {
+      case "UNIT":
+        unitCount += count;
+        break;
+
+      case "SKILL":
+        skillCount += count;
+        break;
+
+     case "ITEM":
+        itemCount += count;
+        break;
+    }
+  });
+
   const triggerTotal = Object.keys(deck).reduce((sum, id) => {
   const card = cards.find(c => c.id === id);
 
@@ -787,13 +821,22 @@ function renderDeck(){
   }, 0);
   
   const overDeck = total > DECK_LIMIT;
+
   deckCountEl.innerHTML =
-  "デッキ枚数: " + total + " / " + DECK_LIMIT
-  + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '')
-  + '<br>トリガー: ' + triggerTotal + ' / 8'
-  + (triggerTotal > 8
-      ? ' <span class="badge-over">8枚超過</span>'
-      : '');
+  total + "枚 / " + DECK_LIMIT + "枚" +
+  (overDeck ? ' <span class="badge-over">超過</span>' : '') +
+
+  '　トリガー ' + triggerTotal + ' / 8' +
+  (triggerTotal > 8
+    ? ' <span class="badge-over">超過</span>'
+    : '') +
+
+  '<br>' +
+
+  'UNIT ' + unitCount +'枚'+
+  '　SKILL ' + skillCount +'枚'+
+  '　ITEM ' + itemCount +'枚';
+
 
 
   const ids = sortDeckIds(Object.keys(deck));
@@ -1040,7 +1083,44 @@ if (leaderId) {
     meta.style.marginBottom = '10px';
     const total = currentDeckCount();
     const now = new Date();
-    meta.textContent = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}　デッキ枚数：${total}`;
+    let unitCount = 0;
+let skillCount = 0;
+let itemCount = 0;
+let triggerTotal = 0;
+
+Object.keys(deck).forEach(id => {
+  const card = cards.find(c => c.id === id);
+  if (!card) return;
+
+  const count = deck[id] || 0;
+
+  switch ((card.type || "").toUpperCase()) {
+    case "UNIT":
+      unitCount += count;
+      break;
+
+    case "SKILL":
+      skillCount += count;
+      break;
+
+    case "ITEM":
+      itemCount += count;
+      break;
+  }
+
+  if (String(card.trigger || "").toUpperCase() === "TRIGGER") {
+    triggerTotal += count;
+  }
+});
+    meta.innerHTML =
+`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}
+<br>
+${total}枚 / ${DECK_LIMIT}枚　
+トリガー ${triggerTotal} / 8
+<br>
+UNIT ${unitCount}枚　
+SKILL ${skillCount}枚　
+ITEM ${itemCount}枚`;
     wrap.appendChild(meta);
   
     function makeImg(src, w){
