@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <title>ニベルアリーナ デッキビルダー（非公式）</title>
 
 <style>
@@ -770,19 +775,26 @@ function renderDeck(){
   const total = currentDeckCount();
   const triggerTotal = Object.keys(deck).reduce((sum, id) => {
   const card = cards.find(c => c.id === id);
-  if (!card) return sum;
 
-  if (String(card.trigger || "").toUpperCase() === "TRIGGER") {
+  if (
+    card &&
+    String(card.trigger || "").toUpperCase() === "TRIGGER"
+  ) {
     return sum + (deck[id] || 0);
   }
 
   return sum;
   }, 0);
+  
   const overDeck = total > DECK_LIMIT;
   deckCountEl.innerHTML =
   "デッキ枚数: " + total + " / " + DECK_LIMIT
   + (overDeck ? ' <span class="badge-over">40枚超過</span>' : '')
-  + (triggerTotal > 8 ? ' <span class="badge-over">トリガー8枚超過</span>' : '');
+  + '<br>トリガー: ' + triggerTotal + ' / 8'
+  + (triggerTotal > 8
+      ? ' <span class="badge-over">8枚超過</span>'
+      : '');
+
 
   const ids = sortDeckIds(Object.keys(deck));
   if (ids.length === 0){
