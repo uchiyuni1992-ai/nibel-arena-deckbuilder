@@ -222,6 +222,34 @@ button{cursor:pointer;}
   font-size:14px;
   padding:4px 0;
 }
+.deckButtons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-bottom:8px;
+}
+
+.deckButtons{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  padding: 4px;
+  margin-bottom: 8px;
+
+  background: #f5f5f5;
+  border-bottom: 1px solid #ccc;
+}
+
+.deckButtons button{
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
 
 </style>
 </head>
@@ -270,6 +298,12 @@ button{cursor:pointer;}
 
   <!-- デッキエリア -->
   <div id="deckArea">
+    <div class="deckButtons">
+      <button id="clearDeckBtn" >デッキをリセット</button>
+      <button id="toggleDeckViewBtn" >表示：リスト</button>
+      <button id="toggleDeckTypeBtn">種類別：OFF</button>
+      <button id="exportDeckImgBtn" >画像で保存</button>
+    </div> 
     <div>
       <h2 style="font-size:16px;margin:4px 0;">リーダー</h2>
       <div id="leaderSlot">未選択</div>
@@ -282,10 +316,7 @@ button{cursor:pointer;}
       <h2 style="font-size:16px;margin:4px 0;">デッキ</h2>
       <div id="deckCount" class="count"></div>
       <div id="deckList"></div>
-      <button id="clearDeckBtn" style="margin-top:4px;font-size:11px;">デッキをリセット</button>
-      <button id="toggleDeckViewBtn" style="margin-top:4px;font-size:11px;">表示：リスト</button>
-      <button id="exportDeckImgBtn" style="margin-top:4px;font-size:11px;">画像で保存</button>
-    </div>
+     </div>
   </div>
 
 </div>
@@ -310,6 +341,17 @@ function updateDeckViewBtn(){
   toggleDeckViewBtn.textContent = '表示：' + (deckView === 'grid' ? 'グリッド' : 'リスト');
 }
 
+let deckTypeView =
+  localStorage.getItem('deckTypeView') || 'normal';
+
+function updateDeckTypeBtn() {
+  if (!toggleDeckTypeBtn) return;
+
+  toggleDeckTypeBtn.textContent =
+    '種類別：' +
+    (deckTypeView === 'type' ? 'ON' : 'OFF');
+}
+
 
 // ====== DOM取得 ======
 const input        = document.getElementById('q');
@@ -325,7 +367,25 @@ const setFilterEl    = document.getElementById('setFilter');
 const typeFilterEl   = document.getElementById('typeFilter');
 const exportDeckImgBtn = document.getElementById('exportDeckImgBtn');
 const toggleDeckViewBtn = document.getElementById('toggleDeckViewBtn');
+const toggleDeckTypeBtn = document.getElementById('toggleDeckTypeBtn');
 const exportOverlay    = document.getElementById('exportOverlay');
+if (toggleDeckTypeBtn) {
+  toggleDeckTypeBtn.addEventListener('click', () => {
+
+    deckTypeView =
+      deckTypeView === 'type'
+        ? 'normal'
+        : 'type';
+
+    localStorage.setItem(
+      'deckTypeView',
+      deckTypeView
+    );
+
+    updateDeckTypeBtn();
+    renderDeck();
+  });
+}
 function buildSetFilter() {
   const sets = [...new Set(cards.map(c => c.set))]
     .filter(Boolean)
@@ -846,22 +906,90 @@ function renderDeck(){
     deckListEl.appendChild(div);
     return;
   }
+let displayIds = [...ids];
 
+if (deckTypeView === 'type') {
+const triggerIds = [];
+const normalIds = [];
+
+displayIds.forEach(id => {
+  const card = cards.find(c => c.id === id);
+
+  if (
+    String(card?.trigger || "").toUpperCase()
+      === "TRIGGER"
+  ) {
+    triggerIds.push(id);
+  } else {
+    normalIds.push(id);
+  }
+});
+
+displayIds = [
+  ...triggerIds,
+  ...normalIds
+];
+  displayIds.sort((a, b) => {
+
+    const cardA = cards.find(c => c.id === a);
+    const cardB = cards.find(c => c.id === b);
+
+    const order = {
+      UNIT: 1,
+      SKILL: 2,
+      ITEM: 3
+    };
+
+    const typeA =
+      order[String(cardA?.type || "").toUpperCase()] || 999;
+
+    const typeB =
+      order[String(cardB?.type || "").toUpperCase()] || 999;
+
+    if (typeA !== typeB) {
+      return typeA - typeB;
+    }
+
+    return Number(cardA?.cost || 999)
+         - Number(cardB?.cost || 999);
+  });
+
+}
   // === 表示切替：リスト / グリッド ===
 if (deckView === 'grid'){
 
   const triggerIds = [];
-  const normalIds = [];
+  const unitIds = [];
+  const skillIds = [];
+  const itemIds = [];
 
-  ids.forEach(id => {
+  displayIds.forEach(id => {
+
     const card = cards.find(c => c.id === id);
+
     if (!card) return;
 
     if (String(card.trigger || "").toUpperCase() === "TRIGGER") {
       triggerIds.push(id);
-    } else {
-      normalIds.push(id);
+      return;
     }
+
+    switch (String(card.type || "").toUpperCase()) {
+
+      case "UNIT":
+        unitIds.push(id);
+        break;
+
+      case "SKILL":
+        skillIds.push(id);
+        break;
+
+      case "ITEM":
+        itemIds.push(id);
+        break;
+
+    }
+
   });
 
   function renderDeckSection(cardIds, titleText){
@@ -927,15 +1055,57 @@ if (deckView === 'grid'){
   }
 
   renderDeckSection(triggerIds, "トリガー");
-  renderDeckSection(normalIds, null);
 
-  return;
+  console.log(triggerIds);
+  console.log(unitIds);
+  console.log(skillIds);
+  console.log(itemIds);
+
+if (deckTypeView === 'type') {
+
+  renderDeckSection(unitIds, "UNIT");
+  renderDeckSection(skillIds, "SKILL");
+  renderDeckSection(itemIds, "ITEM");
+
+} else {
+
+  renderDeckSection(
+    [...unitIds, ...skillIds, ...itemIds],
+    null
+  );
+
+}
+
+return;
 }
 
   // === リスト表示（従来） ===
-  ids.forEach(id => {
-    const count = deck[id];
-    const card = cards.find(c => c.id === id) || {id, name:""};
+  displayIds.forEach(id => {
+
+  const count = deck[id];
+  const card = cards.find(c => c.id === id) || {id, name:""};
+
+  if (deckTypeView === 'type') {
+
+    const typeName =
+      String(card.type || "").toUpperCase();
+
+    if (typeName !== currentType) {
+
+      currentType = typeName;
+
+      const title = document.createElement('div');
+
+      title.textContent = currentType;
+
+      title.style.fontWeight = 'bold';
+      title.style.marginTop = '8px';
+      title.style.marginBottom = '4px';
+      title.style.borderBottom = '1px solid #ccc';
+
+      deckListEl.appendChild(title);
+    }
+  }
 
     const row  = document.createElement('div');
     row.className = "deck-card-row";
@@ -1165,18 +1335,65 @@ ITEM ${itemCount}枚`;
      // デッキをトリガーとメインに分離
   const ids = sortDeckIds(Object.keys(deck));
 
+let displayIds = ids;
+
+if (deckTypeView === 'type') {
+
+  displayIds = ids.sort((a, b) => {
+
+    const cardA =
+      cards.find(c => c.id === a);
+
+    const cardB =
+      cards.find(c => c.id === b);
+
+    const order = {
+      UNIT: 1,
+      SKILL: 2,
+      ITEM: 3
+    };
+
+    const typeA =
+      order[
+        String(cardA?.type || "")
+          .toUpperCase()
+      ] || 999;
+
+    const typeB =
+      order[
+        String(cardB?.type || "")
+          .toUpperCase()
+      ] || 999;
+
+    if (typeA !== typeB) {
+      return typeA - typeB;
+    }
+
+    return Number(cardA?.cost || 99)
+      - Number(cardB?.cost || 99);
+
+  });
+
+}
+
   const triggerIds = [];
-  const mainIds = [];
-
-  ids.forEach(id => {
-  const card = cards.find(c => c.id === id);
-  if (!card) return;
-
-  if (String(card.trigger || "").toUpperCase() === "TRIGGER") {
-    triggerIds.push(id);
-  } else {
-    mainIds.push(id);
-  }
+  const unitIds = [];
+  const skillIds = [];
+  const itemIds = [];
+  displayIds.forEach(id => {
+   const card = cards.find(c => c.id === id);
+    if (!card) return;
+    if (String(card.trigger || "").toUpperCase() === "TRIGGER") {
+       triggerIds.push(id);
+     return; }
+     switch (String(card.type || "").toUpperCase()) {
+      case "UNIT": unitIds.push(id);
+      break;
+      case "SKILL": skillIds.push(id);
+      break;
+      case "ITEM": itemIds.push(id);
+      break;
+    }
   });
 
   function appendSection(titleText, cardIds) {
@@ -1185,10 +1402,10 @@ ITEM ${itemCount}枚`;
   if (titleText) {
   const sectionTitle = document.createElement('div');
   sectionTitle.textContent = titleText;
-  sectionTitle.style.fontSize = '20px';
+  sectionTitle.style.fontSize = '14px';
   sectionTitle.style.fontWeight = 'bold';
-  sectionTitle.style.marginTop = '12px';
-  sectionTitle.style.marginBottom = '8px';
+  sectionTitle.style.marginTop = '8px';
+  sectionTitle.style.marginBottom = '4px';
 
   wrap.appendChild(sectionTitle);
   }
@@ -1242,7 +1459,13 @@ ITEM ${itemCount}枚`;
   }
 
   appendSection("トリガー", triggerIds);
-  appendSection("", mainIds);
+   if (deckTypeView === 'type') {
+     appendSection("UNIT", unitIds);
+      appendSection("SKILL", skillIds);
+    appendSection("ITEM", itemIds);
+   } else {
+     appendSection( "", [...unitIds, ...skillIds, ...itemIds] );
+     }
 
     // 画面外に配置してキャプチャ
     wrap.style.position = 'fixed';
@@ -1291,7 +1514,7 @@ ITEM ${itemCount}枚`;
     buildSetFilter();
     buildColorFilter();
     buildTypeFilter();
-
+    updateDeckTypeBtn();
     updateDeckViewBtn();
     renderSearch();
     renderDeck();
